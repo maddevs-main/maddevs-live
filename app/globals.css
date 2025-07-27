@@ -1,57 +1,155 @@
 @import "tailwindcss";
 
-:root {
-  --color-background: #ffffff;
-  --color-background-fade: #F5CAC300;
-  --color-browser: #84A59D;
-  --color-browser-alt: #C4D4D0;
-  --color-page: #F7EDE2;
-  --color-element: #C6CDD2;
-  --color-footer: #C794BB;
-  
-  --page-margin: 20px;
-  --page-padding: 10px;
-  --top-bar-height: 30px;
-  --scroll-bar-width: 0px;
-  --content-gap: 20px;
-  --list-padding: 2rem; 
-  
-  --browser-border-radius: 30px;
-  --browser-top-bar-width: min(50%, 200px);
-  --browser-top-bar-radius: 20px;
-  --points-display: none;
-  
-  --footer-face-width: clamp(60px, 20vh, 194px);
-  --footer-face-position: flex-start;
-  --footer-hand-position: 60%;
-  
-  --shadow-color: 9deg 32% 60%;
-  --shadow-elevation-high:
-    0.3px 0.5px 0.6px hsl(var(--shadow-color) / 0.36),
-    0.9px 1.9px 2.1px -0.5px hsl(var(--shadow-color) / 0.33),
-    1.8px 3.5px 4px -0.9px hsl(var(--shadow-color) / 0.31),
-    3.1px 6.1px 6.9px -1.4px hsl(var(--shadow-color) / 0.29),
-    5.2px 10.5px 11.8px -1.9px hsl(var(--shadow-color) / 0.27),
-    8.6px 17.2px 19.3px -2.4px hsl(var(--shadow-color) / 0.25),
-    13.5px 26.9px 30.2px -2.8px hsl(var(--shadow-color) / 0.23),
-    20.3px 40.5px 45.5px -3.3px hsl(var(--shadow-color) / 0.2);
+/* Local font-face definitions */
+@font-face {
+  font-family: 'Inter';
+  src: url('/assets/fonts/Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/assets/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satisfy';
+  src: url('/assets/fonts/Satisfy/Satisfy-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Poppins';
+  src: url('/assets/fonts/Poppins/Poppins-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Poppins';
+  src: url('/assets/fonts/Poppins/Poppins-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Bebas Neue';
+  src: url('/assets/fonts/Bebas_Neue/BebasNeue-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/assets/fonts/Cormorant_Garamond/CormorantGaramond-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/assets/fonts/Cormorant_Garamond/CormorantGaramond-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TheGoodMonolith';
+  src: url('/assets/fonts/TheGoodMonolith/TheGoodMonolith.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/assets/fonts/PP Neue Montreal Font Family/ppneuemontreal-book.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/assets/fonts/PP Neue Montreal Font Family/ppneuemontreal-bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/assets/fonts/PP Neue Montreal Font Family/ppneuemontreal-italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/assets/fonts/PP Neue Montreal Font Family/ppneuemontreal-medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/assets/fonts/PP Neue Montreal Font Family/ppneuemontreal-semibolditalic.otf') format('opentype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/assets/fonts/PP Neue Montreal Font Family/ppneuemontreal-thin.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
 }
 
-@media (min-width: 550px) {
-  :root {
-    --list-padding: 5rem; 
-    --browser-border-radius: 10px;
-    --browser-top-bar-width: 100%;
-    --browser-top-bar-radius: 0px;
-    --scroll-bar-width: 0px;
-    --footer-face-position: center;
-    --points-display: flex;
-    --footer-hand-position: 70%;
-  }
-}
+/* Remove all Google Fonts imports */
+/* Remove all system font fallbacks */
 
 body {
   margin: 0;
-  padding: 0;
-  background-color: var(--color-background);
+  line-height: normal;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  font-family: 'Inter', sans-serif;
+}
+
+
+
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: #ff0000; 
+  position: fixed;
+  z-index: 9999;
+
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  box-shadow: 0 0 0px #ff0000, 0 0 0px #ff0000;
+}
+
+/* Optional: Remove the spinner */
+#nprogress .spinner {
+  display: none !important;
+}
+
+/* Optional: Customize trickle speed / easing feel */
+#nprogress .peg {
+  display: block;
+  position: absolute;
+ 
+  right: 0px;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 0px #ff0000, 0 0 0px #ff0000;
+  opacity: 1;
+  transform: rotate(3deg) translate(0px, -4px);
 }

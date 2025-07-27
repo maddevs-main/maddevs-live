@@ -1,81 +1,41 @@
 "use client"
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import gsap from 'gsap';
+import Flip from 'gsap/Flip';
+import TextPlugin from 'gsap/TextPlugin';
+import { useRouter } from 'next/navigation';
+gsap.registerPlugin(Flip, TextPlugin);
 
-// --- GSAP ---
-// We will load GSAP, Flip plugin, and Text plugin from a CDN.
-const gsapCdnUrl = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js";
-const flipCdnUrl = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Flip.min.js";
-const textCdnUrl = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js";
-
-// --- MOCK DATA ---
-const mockNewsData = [
-    {
-        id: 1,
-        title: "TERRA COTTA PLAGUE NEWS POST",
-        subtitle: "cooking something great",
-        imageUrl: "https://placehold.co/600x400/D2691E/000000?text=TERRA+COTTA",
-        content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque faucibus ex sapien, vitae pellentesque sem placerat. In id cursus mi, pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra, inceptos himenaeos. \n\n Vivamus dictum magna vitae sem egestas, ac varius nisl venenatis. Donec et eleifend ex, non aliquam quam. Praesent ac magna sit amet sem scelerisque tristique. Cras commodo, elit a lacinia commodo, est magna malesuada est, et laoreet ex nibh non lectus.",
-        layout: "image-top",
-        tags: ['design', 'updates'],
-    },
-    {
-        id: 2,
-        title: "TERRA COTTA NEWS POST",
-        subtitle: "exploring ancient forms",
-        imageUrl: "https://placehold.co/600x400/D2691E/000000?text=ART",
-        content: "Suspendisse potenti. Nullam in erat ut lectus feugiat pulvinar. Proin non elit eget odio feugiat eleifend. Sed eu magna sed justo ullamcorper feugiat. Integer in nisi vel justo consequat lacinia. Duis in porta justo, a volutpat sem. Curabitur vitae nisi vel sem bibendum ultrices. \n\n Nam sit amet nunc nec turpis viverra fermentum. Sed eu facilisis turpis. Nulla facilisi. Praesent nec egestas erat, et facilisis massa. Donec id libero at dolor tincidunt faucibus. Fusce vitae lorem eu justo aliquam egestas. Maecenas sed odio sit amet elit consequat consequat.",
-        layout: "image-right",
-        tags: ['products'],
-    },
-    {
-        id: 3,
-        title: "TERRA COTTA PLAGUE NEWS POST",
-        subtitle: "a study in black and orange",
-        imageUrl: "https://placehold.co/600x400/D2691E/000000?text=ANCIENT+LIFE",
-        content: "Aenean euismod, nisl eget ultricies lacinia, nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl. Sed euismod, nisl eget ultricies lacinia, nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl. \n\n Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.",
-        layout: "image-left",
-        tags: ['design'],
-    },
-     {
-        id: 4,
-        title: "THE LATEST DISCOVERIES",
-        subtitle: "unearthing the past",
-        imageUrl: "https://placehold.co/600x400/D2691E/000000?text=HISTORY",
-        content: "Cras et libero eu ex feugiat tristique. Sed et justo non est condimentum ultrices. Nullam nec libero nec justo aliquam tincidunt. Sed nec nunc et justo consequat eleifend. \n\n Ut fringilla, justo a ultricies aliquam, nunc nunc tincidunt nunc, id lacinia nunc nunc nec nunc. Vivamus nec nunc nec nunc ultricies aliquam. Donec nec nunc nec nunc ultricies aliquam. Fusce nec nunc nec nunc ultricies aliquam.",
-        layout: "image-top",
-        tags: ['updates'],
-    },
-     {
-        id: 5,
-        title: "ANCIENT CIVILIZATIONS",
-        subtitle: "stories etched in clay",
-        imageUrl: "https://placehold.co/600x400/D2691E/000000?text=CULTURE",
-        content: "Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. \n\n Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.",
-        layout: "image-right",
-        tags: ['products', 'design'],
-    }
-];
-
+type News = {
+  id: number;
+  title: string;
+  slug: string;
+  subtitle: string;
+  imageUrl: string;
+  content: string;
+  layout: string;
+  tags: string[];
+};
 
 // --- COMPONENTS ---
 
 // Marquee Component for the flowing text banner
-const Marquee = ({ children, speed = 25 }) => {
-    const marqueeContainerRef = useRef(null);
-    const marqueeContentRef = useRef(null);
+const Marquee = ({ children, speed = 25 }: { children: React.ReactNode; speed?: number }) => {
+    const marqueeContainerRef = useRef<HTMLDivElement | null>(null);
+    const marqueeContentRef = useRef<HTMLDivElement | null>(null);
 
     useLayoutEffect(() => {
-        if (!window.gsap || !marqueeContentRef.current || !marqueeContainerRef.current) return;
+        if (!marqueeContentRef.current || !marqueeContainerRef.current) return;
         
-        const container = marqueeContainerRef.current;
-        const content = marqueeContentRef.current;
-        const originalContent = content.children[0];
+        const container = marqueeContainerRef.current as HTMLDivElement;
+        const content = marqueeContentRef.current as HTMLDivElement;
+        const originalContent = content.children[0] as HTMLElement;
         if (!originalContent) return;
 
         const contentWidth = originalContent.offsetWidth;
         
         while (content.children.length > 1) {
-            content.removeChild(content.lastChild);
+            content.removeChild(content.lastChild as ChildNode);
         }
 
         const clonesNeeded = contentWidth > 0 ? Math.ceil(container.offsetWidth / contentWidth) + 1 : 1;
@@ -84,7 +44,7 @@ const Marquee = ({ children, speed = 25 }) => {
             content.appendChild(originalContent.cloneNode(true));
         }
 
-        const tl = window.gsap.to(content, {
+        const tl = gsap.to(content, {
             x: `-=${contentWidth}`,
             duration: speed,
             ease: 'none',
@@ -106,14 +66,14 @@ const Marquee = ({ children, speed = 25 }) => {
 
 
 // NewsCard Component
-const NewsCard = ({ article, onReadMore, cardRef }) => {
+const NewsCard = ({ article, onReadMore, cardRef }: { article: News; onReadMore: (slug: string) => void; cardRef: (el: HTMLDivElement | null) => void }) => {
     const { title, subtitle, imageUrl, layout } = article;
     
     // Accessibility: Handle keydown for Enter/Space to trigger the action
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onReadMore(article);
+            onReadMore(article.slug);
         }
     };
 
@@ -133,7 +93,7 @@ const NewsCard = ({ article, onReadMore, cardRef }) => {
     );
     const image = (
         <div className="w-full h-48 sm:h-64 md:h-full bg-gray-200" data-flip-id={`image-${article.id}`}>
-            <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+            <img src={imageUrl} alt={`Web development and design news image: ${title}`} className="w-full h-full object-cover" loading="lazy" />
         </div>
     );
 
@@ -151,7 +111,7 @@ const NewsCard = ({ article, onReadMore, cardRef }) => {
     return (
         <div 
             ref={cardRef} 
-            onClick={() => onReadMore(article)} 
+            onClick={() => onReadMore(article.slug)} 
             onKeyDown={handleKeyDown}
             className={commonClasses}
             role="button" // Accessibility: Indicate this div is interactive
@@ -164,14 +124,14 @@ const NewsCard = ({ article, onReadMore, cardRef }) => {
 };
 
 // ArticlePage Component
-const ArticlePage = ({ article, onBack, articleRef }) => (
+const ArticlePage = ({ article, onBack, articleRef }: { article: News; onBack: () => void; articleRef: React.RefObject<HTMLDivElement> }) => (
     <div ref={articleRef} className="fixed top-0 left-0 w-full h-full bg-white z-20 overflow-y-auto" style={{visibility: 'hidden'}}>
       <div className="max-w-4xl mx-auto py-8 md:py-16 px-4 sm:px-6 md:px-8">
         <button onClick={onBack} className="font-bold uppercase tracking-widest mb-8 hover:underline">
             NEWS/
         </button>
         <div className="w-full h-64 md:h-96 bg-gray-200 mb-8" data-flip-id={`image-${article.id}`}>
-            <img src={article.imageUrl} alt={article.title} className="w-full h-full object-cover" />
+            <img src={article.imageUrl} alt={`Web development and creative design main image for news article: ${article.title}`} className="w-full h-full object-cover" loading="lazy" />
         </div>
         <div data-flip-id={`content-${article.id}`}>
           <h1 data-article-title className="text-3xl sm:text-4xl md:text-6xl font-bold uppercase tracking-wider">{article.title}</h1>
@@ -184,61 +144,84 @@ const ArticlePage = ({ article, onBack, articleRef }) => (
 );
 
 // HomePage Component
-const HomePage = ({ onReadMore, setCardRefs, isArticleVisible, activeTag, setActiveTag }) => {
-    const cardRefs = useRef({});
-    
+const HomePage = ({ news, onReadMore, setCardRefs, isArticleVisible, activeTag, setActiveTag, error }: {
+  news: News[];
+  onReadMore: (slug: string) => void;
+  setCardRefs: (refs: Partial<Record<number, HTMLDivElement>>) => void;
+  isArticleVisible: boolean;
+  activeTag: string;
+  setActiveTag: (tag: string) => void;
+  error?: string | null;
+}) => {
+    const cardRefs = useRef<Partial<Record<number, HTMLDivElement>>>({});
+    const glitchRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         setCardRefs(cardRefs.current);
     }, [setCardRefs]);
-    
-    const filteredNews = mockNewsData.filter(article =>
+    useLayoutEffect(() => {
+      if (!glitchRef.current) return;
+      gsap.set(glitchRef.current, { opacity: 0, scale: 0.98, filter: 'none' });
+      const tl = gsap.timeline();
+      tl.to(glitchRef.current, { opacity: 1, duration: 0.01 });
+      tl.to(glitchRef.current, { scale: 1.03, filter: 'drop-shadow(0 0 4px #f00)', duration: 0.04, ease: 'power1.in' }, ">-");
+      tl.to(glitchRef.current, { scale: 0.97, filter: 'drop-shadow(0 0 4px #0ff)', duration: 0.04, ease: 'power1.in' }, "<");
+      tl.to(glitchRef.current, { scale: 1, filter: 'none', duration: 0.08, ease: 'power1.out' }, ">-");
+      tl.to(glitchRef.current, { opacity: 0.7, duration: 0.03, yoyo: true, repeat: 1 }, ">-");
+      tl.to(glitchRef.current, { opacity: 1, duration: 0.03 }, ">-");
+      return () => { tl.kill(); };
+    }, []);
+    const filteredNews = news.filter(article =>
         activeTag === 'All' || article.tags.includes(activeTag.toLowerCase())
     );
-
-    const FilterButton = ({ tag }) => {
+    const FilterButton = ({ tag }: { tag: string }) => {
         const isActive = activeTag === tag;
         return (
              <button
+                className={`px-4 py-2 rounded-full border-2 border-black mr-2 mb-2 uppercase font-bold tracking-widest transition-colors ${isActive ? 'bg-black text-white' : 'bg-white text-black hover:bg-black hover:text-white'}`}
                 onClick={() => setActiveTag(tag)}
-                className={`px-3 sm:px-4 py-2 border-2 border-black uppercase font-bold text-sm sm:text-base tracking-widest transition-colors ${
-                    isActive ? 'bg-black text-white' : 'hover:bg-black hover:text-white'
-                }`}
             >
                 {tag}
             </button>
         );
-    }
-    
-    return(
-        <div className="w-full" style={{ visibility: isArticleVisible ? 'hidden' : 'visible'}}>
-            <header className="text-center md:text-left py-8 md:py-12 border-b-2 border-black">
-                <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold tracking-widest uppercase">NEWS</h1>
+    };
+    // Get the latest three news titles (most recent first)
+    const sortedNews = [...news].sort((a, b) => (b.id || 0) - (a.id || 0));
+    const latestTitles = [
+      sortedNews[0]?.title || '',
+      sortedNews[1]?.title || sortedNews[0]?.title || '',
+      sortedNews[2]?.title || sortedNews[1]?.title || sortedNews[0]?.title || '',
+    ];
+    return (
+        <div ref={glitchRef} className="w-full py-8 md:py-16 px-4 sm:px-6 md:px-8">
+  
+            <header className="text-center items-start md:text-left py-8 md:py-12 border-b-2 border-black">
+                <h1 className="text-5xl flex sm:text-6xl md:text-8xl font-bold tracking-widest">/news</h1>
                 <div className="mt-4">
-                    <Marquee speed={25 + Math.random() * 5}><p className="text-xl sm:text-2xl md:text-4xl font-bold uppercase tracking-wider mx-4">Lorem Ipsum Released</p></Marquee>
-                    <Marquee speed={20 + Math.random() * 5}><p className="text-xl sm:text-2xl md:text-4xl font-bold uppercase tracking-wider mx-4">Lorem Ipsum Released</p></Marquee>
-                    <Marquee speed={30 + Math.random() * 5}><p className="text-xl sm:text-2xl md:text-4xl font-bold uppercase tracking-wider mx-4">Lorem Ipsum Released</p></Marquee>
+                    <Marquee speed={25 + Math.random() * 5}><p className="text-xl sm:text-2xl md:text-4xl font-bold uppercase tracking-wider mx-4">{latestTitles[0]}</p></Marquee>
+                    <Marquee speed={20 + Math.random() * 5}><p className="text-xl sm:text-2xl md:text-4xl font-bold uppercase tracking-wider mx-4">{latestTitles[1]}</p></Marquee>
+                    <Marquee speed={30 + Math.random() * 5}><p className="text-xl sm:text-2xl md:text-4xl font-bold uppercase tracking-wider mx-4">{latestTitles[2]}</p></Marquee>
                 </div>
-                 <div role="group" aria-label="Filter news by category" className="mt-8 flex flex-wrap justify-center md:justify-start gap-2 sm:gap-4">
+                 <div role="group" aria-label="Filter news by category" className="mt-8 flex flex-wrap justify-start md:justify-start gap-2 sm:gap-4">
                     <FilterButton tag="All" />
-                    <FilterButton tag="Design" />
-                    <FilterButton tag="Products" />
-                    <FilterButton tag="Updates" />
+                    {Array.from(new Set(news.flatMap(n => n.tags.map(t => t.charAt(0).toUpperCase() + t.slice(1))))).map(tag => (
+                        <FilterButton key={tag} tag={tag} />
+                    ))}
                 </div>
             </header>
-
             <main className="space-y-12 md:space-y-20 mt-12">
-                {filteredNews.map(article => (
+                {error ? (
+                    <div className="text-red-500 p-4">{error}</div>
+                ) : filteredNews.length === 0 ? (
+                    <div className="text-gray-500 p-4">No news found.</div>
+                ) : (
+                    filteredNews.map(article => (
                     <NewsCard 
                         key={article.id} 
                         article={article} 
                         onReadMore={onReadMore}
-                        cardRef={el => cardRefs.current[article.id] = el}
+                            cardRef={(el: HTMLDivElement | null) => cardRefs.current[article.id] = el || undefined}
                     />
-                ))}
-                 {filteredNews.length === 0 && (
-                    <div className="text-center py-12">
-                        <p className="text-lg tracking-widest">No news found for this category.</p>
-                    </div>
+                    ))
                 )}
             </main>
         </div>
@@ -247,80 +230,65 @@ const HomePage = ({ onReadMore, setCardRefs, isArticleVisible, activeTag, setAct
 
 // Main App Component
 export default function App() {
-    const [selectedArticle, setSelectedArticle] = useState(null);
-    const [cardRefs, setCardRefs] = useState({});
-    const [isAnimating, setIsAnimating] = useState(false);
-    const articleRef = useRef(null);
-    const [gsapLoaded, setGsapLoaded] = useState(false);
+    const [news, setNews] = useState<News[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
+    const [isArticleVisible, setIsArticleVisible] = useState(false);
+    const [activeArticle, setActiveArticle] = useState<News | null>(null);
     const [activeTag, setActiveTag] = useState('All');
+    const [cardRefs, setCardRefs] = useState<any>({});
+    const articleRef = useRef<HTMLDivElement>(null);
+    const [gsapLoaded, setGsapLoaded] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(false);
     
-    // Load GSAP scripts and register plugins
     useEffect(() => {
-        const loadScript = (src, onLoad) => {
-            const script = document.createElement('script');
-            script.src = src;
-            script.async = true;
-            script.onload = onLoad;
-            document.body.appendChild(script);
-            return script;
-        };
-
-        const gsapScript = loadScript(gsapCdnUrl, () => {
-             loadScript(flipCdnUrl, () => {
-                loadScript(textCdnUrl, () => {
-                    window.gsap.registerPlugin(window.Flip, window.TextPlugin);
-                    setGsapLoaded(true);
-                });
-             });
-        });
-
-        return () => {
-             if (gsapScript && document.body.contains(gsapScript)) document.body.removeChild(gsapScript);
-        };
+        setGsapLoaded(true);
     }, []);
 
-    const handleReadMore = (article) => {
-        if (isAnimating || !gsapLoaded) return;
-
-        setIsAnimating(true);
-        const cardEl = cardRefs[article.id];
-        if (!cardEl) return;
-
-        // Animate out all other cards
-        Object.values(cardRefs).forEach(ref => {
-            if (ref !== cardEl) {
-                window.gsap.to(ref, { autoAlpha: 0, duration: 0.4 });
+    useEffect(() => {
+        async function fetchNews() {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await fetch('/api/news');
+                const data = await res.json();
+                setNews(data.news || []);
+            } catch (err) {
+                setError('Failed to fetch news');
+            } finally {
+                setLoading(false);
             }
-        });
+        }
+        fetchNews();
+    }, []);
 
-        // After a slight delay, set the selected article to trigger the main animation
-        setTimeout(() => {
-            setSelectedArticle(article);
-        }, 150); // 150ms delay
+    const handleReadMore = (slug: string) => {
+        router.push(`/pam/news/${slug}`);
     };
 
     const handleBack = () => {
-        if (isAnimating || !gsapLoaded || !selectedArticle) return;
+        if (isAnimating || !gsapLoaded || !activeArticle) return;
         
-        const cardEl = cardRefs[selectedArticle.id];
+        const cardEl = cardRefs[activeArticle.id];
         if (!cardEl) return;
 
         setIsAnimating(true);
         
-        window.gsap.killTweensOf(articleRef.current.querySelectorAll('[data-article-title], [data-article-subtitle], [data-article-content]'));
+        gsap.killTweensOf(articleRef.current.querySelectorAll('[data-article-title], [data-article-subtitle], [data-article-content]'));
         
-        const state = window.Flip.getState(
+        const state = Flip.getState(
             articleRef.current.querySelectorAll("[data-flip-id]")
         );
 
         // Animate all cards back to visibility
         Object.values(cardRefs).forEach(ref => {
-            window.gsap.to(ref, { autoAlpha: 1, duration: 0.4, delay: 0.6 });
+            gsap.to(ref, { autoAlpha: 1, duration: 0.4, delay: 0.6 });
         });
 
-        const masterTl = window.gsap.timeline({
+        const masterTl = gsap.timeline({
             onComplete: () => {
-                setSelectedArticle(null);
+                setActiveArticle(null);
                 setIsAnimating(false);
                 cardEl.style.visibility = 'visible';
             }
@@ -340,7 +308,7 @@ export default function App() {
             transformOrigin: 'left center',
         }, 0);
 
-        const flip = window.Flip.from(state, {
+        const flip = Flip.from(state, {
             targets: cardEl.querySelectorAll("[data-flip-id]"),
             duration: 1,
             ease: "power3.inOut",
@@ -351,17 +319,17 @@ export default function App() {
     };
     
     useLayoutEffect(() => {
-        if (selectedArticle && gsapLoaded) {
+        if (activeArticle && gsapLoaded) {
             window.scrollTo(0,0);
             if(articleRef.current) articleRef.current.scrollTop = 0;
             
-            const cardEl = cardRefs[selectedArticle.id];
+            const cardEl = cardRefs[activeArticle.id];
             if (!cardEl) {
                 setIsAnimating(false);
                 return;
             };
 
-            const state = window.Flip.getState(
+            const state = Flip.getState(
                 cardEl.querySelectorAll("[data-flip-id]")
             );
             
@@ -377,14 +345,14 @@ export default function App() {
             subtitleEl.textContent = '';
             contentEl.textContent = '';
             
-            window.gsap.set(articleRef.current, {
+            gsap.set(articleRef.current, {
                 visibility: 'visible',
                 transformOrigin: 'left center',
                 rotationY: -90,
                 autoAlpha: 0
             });
             
-            const masterTl = window.gsap.timeline({
+            const masterTl = gsap.timeline({
                 onComplete: () => setIsAnimating(false)
             });
 
@@ -395,7 +363,7 @@ export default function App() {
                 ease: 'power3.inOut'
             });
 
-            const flip = window.Flip.from(state, {
+            const flip = Flip.from(state, {
                 targets: articleRef.current.querySelectorAll("[data-flip-id]"),
                 duration: 1,
                 ease: "power3.inOut",
@@ -412,31 +380,28 @@ export default function App() {
               .to(subtitleEl, { duration: subtitleDuration, text: originalSubtitle, ease: 'none' }, ">")
               .to(contentEl, { duration: contentDuration, text: originalContent, ease: 'none' }, ">");
         }
-    }, [selectedArticle, gsapLoaded]);
+    }, [activeArticle, gsapLoaded]);
 
-
+    if (loading) return <div className="p-8 text-center">Loading news...</div>;
     return (
         <div style={{ fontFamily: "'SF Mono', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace", perspective: '1200px' }}
-             className="bg-white text-black min-h-screen p-4 sm:p-6 md:p-8">
-            <div className="max-w-7xl mx-auto relative">
+             className="bg-white text-black min-h-screen p-4 sm:p-6 md:p-8 w-screen">
+      
+            <div className="relative w-full">
                 <HomePage 
+                    news={news}
                     onReadMore={handleReadMore} 
                     setCardRefs={setCardRefs} 
-                    isArticleVisible={!!selectedArticle}
+                    isArticleVisible={isArticleVisible}
                     activeTag={activeTag}
                     setActiveTag={setActiveTag}
+                    error={error}
                 />
-                {selectedArticle && (
-                    <ArticlePage 
-                        article={selectedArticle} 
-                        onBack={handleBack}
-                        articleRef={articleRef}
-                    />
-                )}
             </div>
-            <footer className="text-center py-12 mt-12 border-t-2 border-black">
-                <p className="tracking-widest text-sm">TERRA COTTA NEWS • © 2025</p>
-            </footer>
+            <div className="sr-only">News: web development, digital agency, SaaS, AI, technology updates</div>
+            {/* <footer className="text-center py-12 mt-12 border-t-2 border-black">
+     
+            </footer> */}
         </div>
     );
 }

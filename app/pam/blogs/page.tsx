@@ -1,80 +1,25 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-
-// Mock Data for the blog posts
-// The isPinned boolean is used to control which posts appear in the sidebar.
-const mockBlogs = [
-    {
-        id: 1,
-        title: 'Terra Cota Blog Name',
-        excerpt: 'This is Lorem Ipsum, only typed by me so even navigating to elsewhere isn’t worth it for this, i hope this fulfills the design requirements and your imagination necessities.',
-        author: 'Arjuna Dhananjaya',
-        date: '12th May \'25',
-        content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut laoreet ac sapien sed. Class aptent taciti sociosqu ad litora torquent per conubia nostra inceptos himenaeos.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut laoreet ac sapien sed. Class aptent taciti sociosqu ad litora torquent per conubia nostra inceptos himenaeos.\n\nFaucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut laoreet ac sapien sed. Class aptent taciti sociosqu ad litora torquent per conubia nostra inceptos himenaeos.`,
-        imageUrl: 'https://placehold.co/600x400/E6DACE/282222?text=Ancient+Art+1',
-        detailImageUrl2: 'https://placehold.co/600x800/E6DACE/282222?text=Detail+View',
-        isPinned: true,
-    },
-    {
-        id: 2,
-        title: 'Exploring Ancient Vases',
-        excerpt: 'A deep dive into the stories painted on classical pottery, revealing tales of gods, heroes, and daily life from a bygone era.',
-        author: 'Helena Troy',
-        date: '10th May \'25',
-        content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut laoreet ac sapien sed. Class aptent taciti sociosqu ad litora torquent per conubia nostra inceptos himenaeos.`,
-        imageUrl: 'https://placehold.co/600x400/E6DACE/282222?text=Ancient+Art+2',
-        detailImageUrl2: 'https://placehold.co/600x800/E6DACE/282222?text=Vase+Detail',
-        isPinned: true,
-    },
-    {
-        id: 3,
-        title: 'The Symposium in Art',
-        excerpt: 'Analyzing the depiction of social gatherings and philosophical discussions on ancient Greek kraters and kylixes.',
-        author: 'Socrates Jr.',
-        date: '8th May \'25',
-        content: `This is a detailed exploration of symposium scenes in art. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas.`,
-        imageUrl: 'https://placehold.co/600x400/E6DACE/282222?text=Ancient+Art+3',
-        detailImageUrl2: 'https://placehold.co/600x800/E6DACE/282222?text=Symposium+Art',
-        isPinned: false,
-    },
-    {
-        id: 4,
-        title: 'Mythological Creatures',
-        excerpt: 'From the Minotaur to the Hydra, a look at the fantastical beasts that adorned ancient pottery and their symbolic meanings.',
-        author: 'Perseus Jackson',
-        date: '5th May \'25',
-        content: `Myths and legends come to life on these ancient artifacts. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas.`,
-        imageUrl: 'https://placehold.co/600x400/E6DACE/282222?text=Ancient+Art+4',
-        detailImageUrl2: 'https://placehold.co/600x800/E6DACE/282222?text=Creature+Detail',
-        isPinned: false,
-    },
-    {
-        id: 5,
-        title: 'The Craft of Black-Figure Pottery',
-        excerpt: 'Understanding the intricate techniques used by artisans to create the iconic black-figure style of vase painting.',
-        author: 'Athena Craftswoman',
-        date: '2nd May \'25',
-        content: 'The technique is fascinating. You start with the clay shape, then apply a slip that turns black during firing... Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis.',
-        imageUrl: 'https://placehold.co/600x400/E6DACE/282222?text=Ancient+Art+5',
-        detailImageUrl2: 'https://placehold.co/600x800/E6DACE/282222?text=Pottery+Craft',
-        isPinned: true,
-    },
-     {
-        id: 6,
-        title: 'Daily Life in Ancient Greece',
-        excerpt: 'Pottery provides a unique window into the everyday activities, clothing, and customs of the ancient world.',
-        author: 'Historian Maximus',
-        date: '1st May \'25',
-        content: 'From weaving to warfare, the scenes offer invaluable insights. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor.',
-        imageUrl: 'https://placehold.co/600x400/E6DACE/282222?text=Ancient+Art+6',
-        detailImageUrl2: 'https://placehold.co/600x800/E6DACE/282222?text=Daily+Life',
-        isPinned: false,
-    }
-];
+import { useRouter } from 'next/navigation';
+import gsap from 'gsap';
 
 // -- COMPONENTS --
 
-const Typewriter = ({ text, speed = 50, className = "", onFinished = () => {} }) => {
+type Blog = {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  author: string;
+  date: string;
+  content: string;
+  imageUrl: string;
+  detailImageUrl2: string;
+  isPinned: boolean;
+  tags: string[]; // Added tags field
+};
+
+const Typewriter = ({ text, speed = 50, className = "", onFinished = () => {} }: { text: string; speed?: number; className?: string; onFinished?: () => void }) => {
     const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
@@ -96,20 +41,26 @@ const Typewriter = ({ text, speed = 50, className = "", onFinished = () => {} })
     return <span className={className}>{displayText}</span>;
 };
 
-const BlogCard = ({ blog, onSelect, variant = 'default' }) => {
+const BlogCard = ({ blog, onSelect, variant = 'default' }: { blog: Blog; onSelect: (slug: string) => void; variant?: string }) => {
     // Sidebar variant now has a hard shadow effect, similar to the main cards.
     if (variant === 'sidebar') {
         return (
             <div
-                className="grid grid-cols-3 gap-4 items-start cursor-pointer transition-all duration-200 ease-in-out bg-[#D1D0D0] p-3 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#282222] active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_#282222]"
-                onClick={() => onSelect(blog.id)}
+                className="bg-[#F3F3E0] grid grid-cols-3 gap-4 items-start cursor-pointer border-2 border-[#22222] transition-all duration-200 ease-in-out p-0 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#282222] active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_#282222]"
+                onClick={() => onSelect(blog.slug)}
             >
                 <div className="col-span-1">
-                    <img src={blog.imageUrl} alt={blog.title} className="w-full object-cover aspect-square" />
+                    <img src={blog.imageUrl} alt={`Web development and design blog image: ${blog.title}`} className="w-full object-cover aspect-square" loading="lazy" />
                 </div>
                 <div className="col-span-2 self-center">
                     <p className="text-xs text-[#474242] mb-1">{blog.date}</p>
                     <p className="text-sm font-semibold leading-tight text-[#000000]">{blog.title}</p>
+                    {/* Tags */}
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {blog.tags && blog.tags.map((tag, idx) => (
+                        <span key={idx} className="bg-[#d1cfcf] text-xs px-2 py-0.5 rounded-full text-[#282222] uppercase font-bold tracking-wider">{tag}</span>
+                      ))}
+                    </div>
                 </div>
             </div>
         );
@@ -118,73 +69,115 @@ const BlogCard = ({ blog, onSelect, variant = 'default' }) => {
     // Default card for the main grid.
     return (
         <div 
-            className="bg-[#D1D0D0] flex flex-col cursor-pointer transition-all duration-200 ease-in-out hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_#282222] active:translate-x-0 active:translate-y-0 active:shadow-[2px_2px_0px_#282222]"
-            onClick={() => onSelect(blog.id)}
+            className="bg-[#948979] flex flex-col cursor-pointer transition-all duration-200 border-2 border-[#282222] ease-in-out hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_#282222] active:translate-x-0 active:translate-y-0 active:shadow-[2px_2px_0px_#282222]"
+            onClick={() => onSelect(blog.slug)}
         >
             <div className="overflow-hidden">
-                <img src={blog.imageUrl} alt={blog.title} className="w-full object-cover aspect-[4/3]" />
+                <img src={blog.imageUrl} alt={`Web development and design blog image: ${blog.title}`} className="w-full object-cover aspect-[4/3]" loading="lazy" />
             </div>
-            <div className="p-4 sm:p-6 flex flex-col flex-grow"> 
+            <div className="p-4 sm:p-6 flex flex-col border-t-1 border-[#282222] flex-grow"> 
                 <h3 className="text-lg font-semibold text-[#000000]">{blog.title}</h3>
                 <p className="text-sm text-[#282222] mt-2 flex-grow">{blog.excerpt}</p>
+                {/* Tags */}
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {blog.tags && blog.tags.map((tag, idx) => (
+                    <span key={idx} className="bg-[#d1cfcf] text-xs px-2 py-0.5 rounded-full text-[#282222] uppercase font-bold tracking-wider">{tag}</span>
+                  ))}
+                </div>
                 <p className="text-xs text-[#474242] mt-4 text-right">{blog.date}</p>
             </div>
         </div>
     );
 };
 
-const BlogListPage = ({ onNavigate }) => {
+const BlogListPage = ({ blogs, onNavigate, error }: { blogs: Blog[]; onNavigate: (slug: string) => void; error?: string | null }) => {
     const [visible, setVisible] = useState(false);
+    const [activeTag, setActiveTag] = useState('All');
+    const containerRef = React.useRef<HTMLDivElement>(null);
     // Pinned blogs are filtered for the sidebar.
-    const pinnedBlogs = mockBlogs.filter(b => b.isPinned);
-    // Regular blogs are all non-pinned posts.
-    const regularBlogs = mockBlogs.filter(b => !b.isPinned);
-
+    const pinnedBlogs = blogs.filter((b: Blog) => b.isPinned);
+    // All blogs (including pinned and unpinned)
+    const allBlogs = blogs;
+    // Tag filtering
+    const allTags = Array.from(new Set(blogs.flatMap(b => (b.tags ?? []).map(t => t.charAt(0).toUpperCase() + t.slice(1)))));
+    const filteredBlogs = activeTag === 'All' ? allBlogs : allBlogs.filter(blog => (blog.tags ?? []).map(t => t.toLowerCase()).includes(activeTag.toLowerCase()));
     useEffect(() => {
         const timer = setTimeout(() => setVisible(true), 10);
         return () => clearTimeout(timer);
     }, []);
+    React.useLayoutEffect(() => {
+      if (!containerRef.current) return;
+      gsap.set(containerRef.current, { opacity: 0, y: 40 });
+      gsap.to(containerRef.current, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' });
+    }, []);
     
-    const handleNavigation = (blogId) => {
+    const handleNavigation = (slug: string) => {
         setVisible(false);
         setTimeout(() => {
-            onNavigate(blogId);
+            onNavigate(slug);
         }, 500);
     };
-
+    // Tag filter button
+    const FilterButton = ({ tag }: { tag: string }) => {
+      const isActive = activeTag === tag;
+      return (
+        <button
+          className={`px-4 py-2 rounded-full border-2 border-black mr-2 mb-2 uppercase font-bold tracking-widest transition-colors ${isActive ? 'bg-black text-white' : 'bg-white text-black hover:bg-black hover:text-white'}`}
+          onClick={() => setActiveTag(tag)}
+        >
+          {tag}
+        </button>
+      );
+    };
     return (
-        <div className={`bg-[#EFEFEF] min-h-screen p-4 sm:p-8 md:p-12 font-mono transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-            <header className="flex justify-between items-center mb-12">
-                <h1 className="text-5xl md:text-7xl font-bold text-[#000000] uppercase">Blogs</h1>
-            </header>
-            <main className="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-16">
-                {/* Main Content Area now only contains regular blogs */}
-                <div className="lg:col-span-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {regularBlogs.map(blog => (
-                            <BlogCard key={blog.id} blog={blog} onSelect={handleNavigation} />
-                        ))}
-                    </div>
+        <div ref={containerRef} className={`bg-[#748873] min-h-screen p-4 sm:p-8 md:p-12 font-mono`}>
+             <div className='h-[60px]'></div>
+            <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-12">
+                <h1 className="text-5xl md:text-7xl font-bold text-[#000000] ">/blogs</h1>
+                <div role="group" aria-label="Filter blogs by tag" className="mt-8 flex flex-wrap gap-2 sm:gap-4">
+                  <FilterButton tag="All" />
+                  {allTags.map(tag => (
+                    <FilterButton key={tag} tag={tag} />
+                  ))}
                 </div>
-                {/* Sidebar now contains the Pinned posts */}
-                <aside className="lg:col-span-1">
-                     <div className="sticky top-12">
-                        <div className="bg-[#D1D0D0] p-6">
-                            <h3 className="font-semibold text-[#000000] mb-4 border-b border-[#A0A0A0] pb-2">°pinned</h3>
-                            <div className="space-y-4">
-                                {pinnedBlogs.map(blog => (
-                                    <BlogCard key={blog.id} blog={blog} onSelect={handleNavigation} variant="sidebar" />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </aside>
-            </main>
+            </header>
+          
+            <main className="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-16">
+  {/* Sidebar: visible on top in mobile, on side in large screens */}
+  <aside className="lg:col-span-1 order-1 lg:order-2">
+    
+    <div className="sticky top-12">
+      <div className="bg-[#393E46] p-6">
+        <h3 className="font-semibold text-[white] mb-4 border-b border-[#A0A0A0] pb-2"> pinned</h3>
+        <div className="space-y-4">
+          {pinnedBlogs.map(blog => (
+            <BlogCard key={blog.id} blog={blog} onSelect={handleNavigation} variant="sidebar" />
+          ))}
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  {/* Main blog content */}
+  <div className="lg:col-span-2 order-2 lg:order-1">
+  <p>* date published</p>
+  <br></br>
+    {error ? (
+      <div className="text-red-500 p-4">{error}</div>
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {filteredBlogs.map(blog => (
+          <BlogCard key={blog.id} blog={blog} onSelect={handleNavigation} />
+        ))}
+      </div>
+    )}
+  </div>
+</main>
         </div>
     );
 };
 
-const BlogDetailPage = ({ blog, onNavigateBack }) => {
+const BlogDetailPage = ({ blog, onNavigateBack }: { blog: Blog; onNavigateBack: () => void }) => {
     const [visible, setVisible] = useState(false);
     const [typingStep, setTypingStep] = useState(0);
 
@@ -212,7 +205,7 @@ const BlogDetailPage = ({ blog, onNavigateBack }) => {
 
     if (!blog) {
         return (
-            <div className="bg-white min-h-screen flex flex-col items-center justify-center font-mono">
+            <div className="bg-[white] min-h-screen flex flex-col items-center justify-center font-mono">
                 <p>Blog not found.</p>
                  <button onClick={onNavigateBack} className="text-[#474242] hover:text-[#000000] underline mt-4">
                     &larr; Back to all blogs
@@ -223,10 +216,12 @@ const BlogDetailPage = ({ blog, onNavigateBack }) => {
 
     return (
         <div className={`bg-[#282222] min-h-screen p-4 sm:p-8 md:p-12 font-mono transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+             <div className='h-[60px]'></div>
             <header className="flex justify-between items-start mb-8 md:mb-12">
                  <div>
+               
                     <button onClick={handleBackNavigation} className="text-base text-[#C0BDBD] hover:text-[#FFFFFF] mb-4 block hover:underline">
-                        Blogs/
+                        blogs/
                     </button>
                     <h1 className="text-4xl md:text-6xl font-bold text-[#FFFFFF] max-w-2xl min-h-[80px] md:min-h-[144px]">
                         {typingStep === 0 && <Typewriter text={blog.title} speed={typingSpeed} onFinished={handleTypingFinished} />}
@@ -254,8 +249,14 @@ const BlogDetailPage = ({ blog, onNavigateBack }) => {
                 </div>
                 
                 <div className={`lg:col-span-1 space-y-8 transition-opacity duration-1000 ${typingStep > 0 ? 'opacity-100' : 'opacity-0'}`}>
-                    <img src={blog.imageUrl} alt={blog.title} className="w-full object-cover"/>
-                    <img src={blog.detailImageUrl2} alt="Detail view of pottery" className="w-full object-cover" />
+                    <img src={blog.imageUrl} alt={`Web development and design blog image: ${blog.title}`} className="w-full object-cover" loading="lazy"/>
+                    <img src={blog.detailImageUrl2} alt="Creative design detail view image" className="w-full object-cover" loading="lazy" />
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1 mt-4">
+                      {blog.tags && blog.tags.map((tag, idx) => (
+                        <span key={idx} className="bg-[#d1cfcf] text-xs px-2 py-0.5 rounded-full text-[#282222] uppercase font-bold tracking-wider">{tag}</span>
+                      ))}
+                    </div>
                 </div>
             </article>
         </div>
@@ -266,34 +267,42 @@ const BlogDetailPage = ({ blog, onNavigateBack }) => {
 // -- MAIN APP --
 
 export default function App() {
-    const [navigation, setNavigation] = useState({ page: 'list', selectedBlogId: null });
+    const [blogs, setBlogs] = useState<Blog[]>([]);
+    const [navigation, setNavigation] = useState<{ selectedBlogId: number | null; page: 'list' | 'detail' }>({ selectedBlogId: null, page: 'list' });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
-        document.body.style.fontFamily = `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
-        document.documentElement.style.scrollBehavior = 'smooth';
+        async function fetchBlogs() {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await fetch('/api/blogs');
+                const data = await res.json();
+                setBlogs(data.blogs || []);
+            } catch (err) {
+                setError('Failed to fetch blogs');
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchBlogs();
     }, []);
 
-    const handleNavigateToDetail = (blogId) => {
-        setNavigation({ page: 'detail', selectedBlogId: blogId });
-        window.scrollTo(0, 0); 
+    const handleNavigateToDetail = (slug: string) => {
+        router.push(`/pam/blogs/${slug}`);
     };
-
     const handleNavigateToList = () => {
-        setNavigation({ page: 'list', selectedBlogId: null });
-        window.scrollTo(0, 0);
+        setNavigation({ selectedBlogId: null, page: 'list' });
     };
 
-    const selectedBlog = navigation.selectedBlogId
-        ? mockBlogs.find(b => b.id === navigation.selectedBlogId)
-        : null;
-
+    if (loading) return <div className="p-8 text-center">Loading blogs...</div>;
     return (
-        <div className="antialiased">
-            {navigation.page === 'list' ? (
-                <BlogListPage onNavigate={handleNavigateToDetail} />
-            ) : (
-                <BlogDetailPage blog={selectedBlog} onNavigateBack={handleNavigateToList} />
-            )}
-        </div>
+        <>
+          <div className="sr-only">Blogs: web development, user experience, SaaS, AI, digital product insights</div>
+          <BlogListPage blogs={blogs} onNavigate={handleNavigateToDetail} error={error} />
+        </>
     );
 }
+

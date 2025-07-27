@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /api/
+Disallow: /server/
+Disallow: /backup/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /test/
+Disallow: /tmp/
+Disallow: /node_modules/
+Allow: /
+Sitemap: /sitemap.xml 

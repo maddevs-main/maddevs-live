@@ -1,137 +1,259 @@
-"use client"
-import React, { useLayoutEffect, useRef } from 'react';
+"use client";
 
-// Main App Component: Sets up the full-page horizontal snap-scrolling experience with pinning.
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
+import gsap from 'gsap';
+import * as THREE from 'three';
+import SupportSection from '@/components/supportoverlay';
+
+// Helper function to load scripts dynamically
+const loadScript = (src) => {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Script load error for ${src}`));
+    document.head.appendChild(script);
+  });
+};
+
+// Metadata is now in page.metadata.ts (server-only)
 export default function App() {
-  const mainContainerRef = useRef(null);
-  const sectionsContainerRef = useRef(null); // A ref for the content div
-  const backgroundsContainerRef = useRef(null); // A ref for the background div
+  const mountRef = useRef(null);
+  const scrollRef = useRef(null);
+ 
+
+  const [isReady, setIsReady] = useState(false);
+  
+  // Refs to manage animation state without causing re-renders
+  const cameraRef = useRef();
+  const cameraTargetX = useRef(0); // Target X position for the camera based on scroll
+  const cameraCurrentX = useRef(0); // Current X position, will ease towards the target
+
+  // --- Animation for first section texts ---
+  const leftSegmentRef = useRef<HTMLDivElement>(null);
+  const leftBottomRef = useRef<HTMLHeadingElement>(null);
+  const rightRef = useRef<HTMLHeadingElement>(null);
 
   useLayoutEffect(() => {
-    // URLs for the GSAP libraries.
-    const gsapUrl = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
-    const scrollTriggerUrl = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js';
-    
-    let gsapScript, scrollTriggerScript;
-    let masterTimeline; // To hold the master GSAP timeline for cleanup
+    if (!leftSegmentRef.current || !leftBottomRef.current || !rightRef.current) return;
+    gsap.set(leftSegmentRef.current, { x: -80, opacity: 0 });
+    gsap.set(leftBottomRef.current, { x: -80, opacity: 0 });
+    gsap.set(rightRef.current, { x: 80, opacity: 0 });
+    gsap.to(leftSegmentRef.current, { x: 0, opacity: 1, duration: 0.8, ease: 'power3.out' });
+    gsap.to(leftBottomRef.current, { x: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, 0);
+    gsap.to(rightRef.current, { x: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, 0);
+  }, []);
 
-    // Function to initialize the scrolling animation.
-    const initGsapAnimation = () => {
-      // Ensure GSAP and ScrollTrigger are loaded.
-      if (window.gsap && window.ScrollTrigger) {
-        window.gsap.registerPlugin(window.ScrollTrigger);
+  // Mark ready immediately (Three.js is imported locally)
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
 
-        const sections = window.gsap.utils.toArray('.snap-section');
-        const numSections = sections.length;
-        
-        // Create a master timeline that is controlled by the scrollbar.
-        masterTimeline = window.gsap.timeline({
-          scrollTrigger: {
-            trigger: mainContainerRef.current,
-            start: 'top top',
-            end: () => '+=' + (sectionsContainerRef.current.offsetWidth - window.innerWidth),
-            pin: true, // Pin the main container for the duration of the animation.
-            scrub: 0.8, // Fine-tuned for a smoother, more responsive feel.
-            snap: {
-                snapTo: 1 / (numSections - 1), // Snap to the start of each section.
-                duration: {min: 0.2, max: 0.6}, // Control the snap animation timing.
-                ease: 'power2.inOut'
-            },
+  // Three.js setup effect
+  useEffect(() => {
+    if (!isReady || !mountRef.current) return;
+
+    let renderer, scene, particles;
+    let ww = window.innerWidth;
+    let wh = window.innerHeight;
+    const centerVector = new THREE.Vector3(0, 0, 0);
+    let previousTime = 0;
+    const mount = mountRef.current;
+
+    const getImageData = (image) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(image, 0, 0);
+      return ctx.getImageData(0, 0, image.width, image.height);
+    };
+
+    const drawTheMap = (imagedata) => {
+      const geometry = new THREE.BufferGeometry();
+      const material = new THREE.PointsMaterial({
+        size: 2,
+        color: 0x6B728E,
+        sizeAttenuation: false,
+      });
+
+      const vertices = [];
+      const destinations = [];
+      const speeds = [];
+
+      for (let y = 0; y < imagedata.height; y += 2) {
+        for (let x = 0; x < imagedata.width; x += 2) {
+          if (imagedata.data[(x * 4 + y * 4 * imagedata.width) + 3] > 128) {
+            vertices.push(Math.random() * 1000 - 500, Math.random() * 1000 - 500, -Math.random() * 500);
+            destinations.push(x - imagedata.width / 2, -y + imagedata.height / 2, 0);
+            speeds.push(Math.random() / 200 + 0.015);
           }
-        });
-
-        // Build the timeline with staggered tweens for a sophisticated parallax effect.
-        for (let i = 1; i < numSections; i++) {
-          const contentTargetX = `-${i * 100}vw`;
-          const label = `section-${i}`;
-
-          // Add a tween for the content to move to the next section.
-          masterTimeline.to(sectionsContainerRef.current, {
-            x: contentTargetX,
-            duration: 1, 
-            ease: 'none'
-          }, label);
-
-          // Add a tween for the background.
-          masterTimeline.to(backgroundsContainerRef.current, {
-            x: contentTargetX,
-            duration: 0.5,
-            ease: 'none'
-          }, `${label}+=0.5`);
         }
       }
+
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      geometry.userData = { destinations, speeds };
+      particles = new THREE.Points(geometry, material);
+      scene.add(particles);
     };
 
-    // Function to load a script dynamically.
-    const loadScript = (src, onLoad) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.onload = onLoad;
-      script.async = false; // Load scripts in order.
-      document.body.appendChild(script);
-      return script;
+    const init = () => {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(ww, wh);
+      renderer.setClearColor(0x000000, 0);
+      mount.appendChild(renderer.domElement);
+
+      scene = new THREE.Scene();
+
+      const camera = new THREE.PerspectiveCamera(50, ww / wh, 0.1, 10000);
+      camera.position.set(0, 0, 200);
+      camera.lookAt(centerVector);
+      cameraRef.current = camera;
+      scene.add(camera);
+
+      const loader = new THREE.TextureLoader();
+      loader.crossOrigin = '';
+      loader.load(
+        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/127738/transparentMap.png",
+        (texture) => {
+          const imagedata = getImageData(texture.image);
+          drawTheMap(imagedata);
+          requestAnimationFrame(render);
+        },
+        undefined,
+        (err) => console.error('An error happened while loading the texture.', err)
+      );
+    };
+
+    const onResize = () => {
+      ww = window.innerWidth;
+      wh = window.innerHeight;
+      if (renderer && cameraRef.current) {
+        renderer.setSize(ww, wh);
+        cameraRef.current.aspect = ww / wh;
+        cameraRef.current.updateProjectionMatrix();
+      }
+    };
+
+    const render = (a) => {
+      requestAnimationFrame(render);
+
+      if (particles) {
+        const positions = particles.geometry.attributes.position.array;
+        const { destinations, speeds } = particles.geometry.userData;
+
+        for (let i = 0; i < positions.length / 3; i++) {
+          const i3 = i * 3;
+          positions[i3] += (destinations[i3] - positions[i3]) * speeds[i];
+          positions[i3 + 1] += (destinations[i3 + 1] - positions[i3 + 1]) * speeds[i];
+          positions[i3 + 2] += (destinations[i3 + 2] - positions[i3 + 2]) * speeds[i];
+        }
+
+        if (a - previousTime > 100) {
+          const index1 = Math.floor(Math.random() * (positions.length / 3));
+          const index2 = Math.floor(Math.random() * (positions.length / 3));
+          const i3_1 = index1 * 3;
+          const i3_2 = index2 * 3;
+          const p1 = { x: positions[i3_1], y: positions[i3_1 + 1] };
+          const p2 = { x: positions[i3_2], y: positions[i3_2 + 1] };
+          gsap.to(p1, { x: p2.x, y: p2.y, duration: Math.random() * 2 + 1, ease: "power2.inOut", onUpdate: () => { positions[i3_1] = p1.x; positions[i3_1 + 1] = p1.y; } });
+          gsap.to(p2, { x: p1.x, y: p1.y, duration: Math.random() * 2 + 1, ease: "power2.inOut", onUpdate: () => { positions[i3_2] = p2.x; positions[i3_2 + 1] = p2.y; } });
+          previousTime = a;
+        }
+        particles.geometry.attributes.position.needsUpdate = true;
+      }
+      
+      if (cameraRef.current) {
+        cameraCurrentX.current += (cameraTargetX.current - cameraCurrentX.current) * 0.05;
+        cameraRef.current.position.x = cameraCurrentX.current;
+        
+        cameraRef.current.lookAt(centerVector);
+        renderer.render(scene, cameraRef.current);
+      }
     };
     
-    // Load GSAP, then load ScrollTrigger, then initialize the animation.
-    gsapScript = loadScript(gsapUrl, () => {
-      scrollTriggerScript = loadScript(scrollTriggerUrl, initGsapAnimation);
-    });
+    init();
+    window.addEventListener('resize', onResize, false);
 
-    // Cleanup function: runs when the component unmounts.
     return () => {
-      if (masterTimeline) {
-          masterTimeline.kill();
+      window.removeEventListener('resize', onResize);
+      if (mount && renderer && renderer.domElement) {
+        mount.removeChild(renderer.domElement);
       }
-      if (window.ScrollTrigger) {
-        window.ScrollTrigger.getAll().forEach(st => st.kill());
+      if (scene) {
+        scene.traverse(object => {
+          if (object.geometry) object.geometry.dispose();
+          if (object.material) {
+            if (Array.isArray(object.material)) object.material.forEach(m => m.dispose());
+            else object.material.dispose();
+          }
+        });
       }
-      // Remove the scripts from the body.
-      if (gsapScript && gsapScript.parentNode) document.body.removeChild(gsapScript);
-      if (scrollTriggerScript && scrollTriggerScript.parentNode) document.body.removeChild(scrollTriggerScript);
+      if(renderer) renderer.dispose();
     };
-  }, []); // Empty dependency array ensures this effect runs only once on mount.
+  }, [isReady]);
 
-  // Component's rendered output.
+  // Scroll handler effect
+  useEffect(() => {
+    const scrollEl = scrollRef.current;
+    if (!scrollEl) return;
+
+    const updateScrollTarget = () => {
+        const scrollLeft = scrollEl.scrollLeft;
+        const scrollWidth = scrollEl.scrollWidth - scrollEl.clientWidth;
+        const scrollPercentage = scrollWidth > 0 ? scrollLeft / scrollWidth : 0;
+        cameraTargetX.current = scrollPercentage * 400;
+    };
+    
+    scrollEl.addEventListener('scroll', updateScrollTarget);
+
+    return () => {
+        scrollEl.removeEventListener('scroll', updateScrollTarget);
+    };
+  }, []);
+
+
   return (
-    <StyleProvider>
-      {/* Main container to be pinned. It needs a fixed height, overflow hidden, and relative positioning. */}
-      <div ref={mainContainerRef} className="h-screen overflow-hidden relative">
-        
-        {/* Backgrounds Container: Positioned behind the content. Contains distinct color blocks. */}
-        <div 
-          ref={backgroundsContainerRef}
-          className="absolute top-0 left-0 w-[400vw] h-full flex flex-nowrap z-0"
-        >
-          {/* Backgrounds for each section. Order is updated to match new section order. */}
-          <div className="w-screen h-full" style={{backgroundColor: '#111827'}}></div>
-          <div className="w-screen h-full" style={{backgroundColor: '#0A0A1D'}}></div>
-          <div className="w-screen h-full" style={{backgroundColor: '#0B112D'}}></div>
-          <div className="w-screen h-full" style={{backgroundColor: '#080724'}}></div>
-        </div>
 
-        {/* This container holds the content sections and will be animated horizontally. */}
-        <div ref={sectionsContainerRef} className="w-[400vw] h-full flex flex-nowrap relative z-10">
-          {/* Section 1 */}
-          <section className="snap-section relative w-screen h-screen bg-transparent text-white">
-            <div className="absolute top-4 left-4 md:top-8 md:left-8">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-light text-white/50 tracking-wide -ml-2">/about</h1>
-              <h2 className="text-8xl md:text-9xl lg:text-[10rem] font-mono text-gray-400 mt-4">
-                maddevs
-              </h2>
+    <div className="relative w-full h-screen bg-[#04001D] overflow-hidden">
+      
+      <div className="sr-only">About us: digital agency, web design, user experience, SaaS, AI, creative technology</div>
+     
+      {/* Fixed background for Three.js canvas. z-0 ensures it's in the background. */}
+      <div ref={mountRef} className="relative top-0 left-0 w-full h-full z-0" />
+      
+      {/* Scrollable container for horizontal scrolling. z-10 ensures it's on top of the canvas. */}
+      <div 
+        ref={scrollRef} 
+        className="absolute top-0 left-0 w-full h-full flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory z-10"
+      >
+    
+        {/* Section 1: Initial Text */}
+        <section className="w-screen h-screen flex-shrink-0 relative snap-start">
+ 
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none p-4 md:p-8 flex flex-col justify-between">
+                <div>
+                    <div ref={leftSegmentRef}>
+                      <h1 className="text-[9vw] mt-20 md:text-5xl font-bold text-white mix-blend-difference">about/</h1>
+                      <h1 className="text-[15vw] md:text-5xl font-bold text-white mix-blend-difference">maddevs</h1>
+                    </div>
+                </div>
+                <div className="self-center text-right w-full">
+                    <h1 ref={rightRef} className="text-[9vw] md:text-5xl font-bold text-white mix-blend-difference">BASED OFF INDIA</h1>
+                </div>
+                <div>
+                    <h1 ref={leftBottomRef} className="text-[12vw] md:text-5xl font-bold text-white mix-blend-difference">WORKING GLOBALLY</h1>
+                </div>
             </div>
-            <div className="absolute bottom-4 left-0 md:bottom-8 pl-4 md:pl-8">
-              <h2 className="text-6xl sm:text-7xl md:text-8xl font-extrabold text-white tracking-tighter">WORKING</h2>
-              <h2 className="text-6xl sm:text-7xl md:text-8xl font-extrabold text-white tracking-tighter">GLOBALLY</h2>
-            </div>
-            <div className="absolute top-1/2 right-0 -translate-y-1/2 text-right pr-4 md:pr-8">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-300 tracking-tighter">BASED OFF</h2>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-300 tracking-tighter">INDIA</h2>
-            </div>
-          </section>
+        </section>
 
-          {/* Section 2 - "We Design" Section */}
-          <section className="snap-section relative w-screen h-screen flex justify-start items-center bg-transparent text-red-600 font-mono pl-4 md:pl-8">
-            <div className="w-full text-left">
+        {/* Section 2 */}
+        <section className="w-screen h-screen flex-shrink-0 flex items-center justify-end snap-start p-4 md:p-8 lg:p-16">
+            <div className="w-full text-right text-white mix-blend-difference">
                 <h2 className="text-[6vw] md:text-[5vw] lg:text-[4vw] uppercase tracking-[0.3em] font-semibold mb-2">
                     we design
                 </h2>
@@ -150,45 +272,44 @@ export default function App() {
                     digital experiences
                 </h1>
             </div>
-          </section>
+        </section>
 
-          {/* Section 3 - Paragraph Section */}
-          <section className="snap-section w-screen h-screen flex items-center bg-transparent text-white p-4 md:p-6 lg:p-8 overflow-hidden">
-            <div className="relative w-full h-full flex items-center">
-              <div className="flex w-full items-start">
-                <div className="absolute top-8 left-[-5vw] sm:top-16 text-white/50 text-[10rem] font-bold leading-none select-none z-0 -translate-y-1/4">
+        {/* Section 3 */}
+        <section className="w-screen h-screen flex-shrink-0 snap-start flex items-center justify-center p-4 sm:p-8 md:p-12">
+            <div className="relative min-h-[60vh] w-full max-w-screen-lg mx-auto bg-black/50 backdrop-blur-md rounded-xl sm:rounded-2xl p-2 sm:p-6 md:p-12 text-white my-8 mt-20 sm:mt-16 md:mt-28 shadow-xl" style={{boxSizing: 'border-box'}}>
+                <div className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 text-white/20 text-8xl sm:text-9xl md:text-[10rem] font-bold select-none -z-10">
                     //
                 </div>
-                <div className="relative pl-4 sm:pl-8 md:pl-12 lg:pl-24">
-                    <div className="pt-2 md:pt-4 lg:pt-6 w-full md:w-4/5 lg:w-3/5 flex flex-col">
-                      <div>
-                        <p className="italic text-justify text-sm md:text-base lg:text-lg text-gray-300/90 leading-relaxed mb-6 md:mb-8">
-                            While there are technologies that do wonder, we were facing hard time with their design—and that is not just how they look, but including functionality. Most products were seeming either like alarm clocks with good sound ability, but the snooze button is somewhere entirely else, if not under the battery; or the visual expression wasn’t really to the mark, hence not channelized with intent. We expect a story, a value, an art—no less than a dream, a meaning in the products and its all expressions, functional and visual. So we decided to do it ourselves, create products with the best of technologies, tools and techniques; design their expression, feel, and make experience as intuitive and empathetic as possible. The aim is to make the system disappear in the experience.
+                <div className="flex flex-col gap-1 sm:gap-4">
+                    <div className='text-xs sm:text-sm'>
+                        <p className="italic text-justify text-xs sm:text-sm md:text-base lg:text-lg text-gray-300/90 leading-relaxed mb-4 sm:mb-6 md:mb-8">
+                            While there are technologies that do wonder, we were facing hard time with their design—and that is not just how they look, but including functionality. Most products were seeming either like alarm clocks with good sound ability, but the snooze button is somewhere entirely else, if not under the battery; or the visual expression wasn't really to the mark, hence not channelized with intent. We expect a story, a value, an art—no less than a dream, a meaning in the products and its all expressions, functional and visual. So we decided to do it ourselves, create products with the best of technologies, tools and techniques; design their expression, feel, and make experience as intuitive and empathetic as possible. The aim is to make the system disappear in the experience.
                         </p>
-                        <p className="italic text-justify text-sm md:text-base lg:text-lg text-gray-300/90 leading-relaxed mb-6 md:mb-8">
-                            Design for us is visualizing the system’s creative expression, the intuitive functional abilities and their cohesion within and across; involves care to the finest grain of details and excellence in mind, while prioritizing individualistic expression and the impact it has over and throughout. We design systems—“that feel good”, that in a profound way says it all.
+                        <p className="italic text-justify text-xs sm:text-sm md:text-base lg:text-lg text-gray-300/90 leading-relaxed mb-4 sm:mb-6 md:mb-8">
+                            Design for us is visualizing the system's creative expression, the intuitive functional abilities and their cohesion within and across; involves care to the finest grain of details and excellence in mind, while prioritizing individualistic expression and the impact it has over and throughout. We design systems—"that feel good", that in a profound way says it all.
                         </p>
-                        <p className="italic text-justify text-sm md:text-base lg:text-lg text-gray-300/90 leading-relaxed">
+                        <p className="italic text-justify text-xs sm:text-sm md:text-base lg:text-lg text-gray-300/90 leading-relaxed">
                             Just Express
                         </p>
-                      </div>
-                      <div className="mt-12 text-right">
-                        <p className="text-base md:text-lg font-medium text-white">Anant Prakash Singh</p>
-                        <p className="text-sm md:text-base text-gray-400">Founder</p>
-                        <p className="text-sm md:text-base text-gray-400">anant@maddevs.in</p>
-                      </div>
+                    </div>
+                    <div className="mt-8 sm:mt-12 text-right">
+                        <p className="text-xs sm:text-base md:text-lg font-medium text-white">Anant Prakash Singh</p>
+                        <p className="text-xs sm:text-base text-gray-400">Founder</p>
+                        <p className="text-xs sm:text-base text-gray-400">anant@maddevs.in</p>
                     </div>
                 </div>
-              </div>
             </div>
-          </section>
+        </section>
 
-          {/* Section 4 - Contact Section */}
-          <section className="snap-section relative w-screen h-screen bg-transparent text-white">
+        {/* Section 4 */}
+        <section id="contact" className="w-screen h-screen flex-shrink-0 flex items-center justify-center snap-start relative text-white mix-blend-difference p-4">
             <div className="absolute bottom-8 left-0 md:bottom-16 pl-4 md:pl-8 z-0">
-                <h2 className="text-8xl md:text-9xl font-extrabold text-white/10 tracking-tighter select-none">CONTACT</h2>
+            <h2 className="text-6xl sm:text-6xl md:text-[10vh] font-black text-white/70 tracking-tighter select-none">
+  CONTACT
+</h2>
+
             </div>
-            <div className="absolute top-8 left-0 md:top-16 pl-4 md:pl-8 z-10 flex flex-col space-y-6 md:space-y-8">
+            <div className="absolute top-25 mt-20 left-0 md:top-16 pl-4 md:pl-8 z-10 flex flex-col space-y-6 md:space-y-8">
                 <a href="mailto:mail@maddevs.in" className="group flex items-center space-x-3 md:space-x-4 text-3xl md:text-5xl font-extrabold tracking-tighter text-gray-200 hover:text-white transition-colors">
                     <svg className="w-8 h-8 md:w-12 md:h-12 text-gray-400 group-hover:text-indigo-300 transition-colors" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M2 4H22V20H2V4ZM4 6V8L12 13L20 8V6H4Z"/>
@@ -202,18 +323,25 @@ export default function App() {
                     <span>+91 9211918520</span>
                 </a>
             </div>
+           
+      {/* Header – Click to Toggle */}
+        {/* Top-right fixed inside section */}
+    <div className="absolute top-25 right-6 z-10">
+      <SupportSection />
+    </div>
+            {/* Social Media Icons - Center Right (original position) */}
             <div className="absolute top-1/2 right-8 md:right-16 -translate-y-1/2 z-10 flex flex-col space-y-4 md:space-y-6">
-                <a href="#" className="text-gray-400 hover:text-white transition-transform hover:scale-110" aria-label="X/Twitter">
+                <a href="https://x.com/maddevsgroup" className="text-gray-400 hover:text-white transition-transform hover:scale-110" aria-label="X/Twitter">
                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="currentColor" viewBox="0 0 16 16">
                        <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.6.75Z"/>
                    </svg>
                 </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-transform hover:scale-110" aria-label="LinkedIn">
+                <a href="https://www.linkedin.com/company/maddevs/" className="text-gray-400 hover:text-white transition-transform hover:scale-110" aria-label="LinkedIn">
                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="currentColor" viewBox="0 0 24 24">
                        <path d="M21 3H3V21H21V3ZM8 18H5V10H8V18ZM6.5 8.25C5.54 8.25 4.75 7.46 4.75 6.5C4.75 5.54 5.54 4.75 6.5 4.75C7.46 4.75 8.25 5.54 8.25 6.5C8.25 7.46 7.46 8.25 6.5 8.25ZM18 18H15V13.37C15 12.03 14.45 11.25 13.25 11.25C12.18 11.25 11.5 12.03 11.5 13.37V18H8.5V10H11.5V11.5C12.03 10.5 13.06 9.75 14.38 9.75C16.94 9.75 18 11.41 18 13.37V18Z"/>
                    </svg>
                 </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-transform hover:scale-110" aria-label="Instagram">
+                <a href="https://www.instagram.com/maddevsgroup/" className="text-gray-400 hover:text-white transition-transform hover:scale-110" aria-label="Instagram" >
                    <svg className="w-8 h-8 md:w-10 md:h-10" fill="currentColor" viewBox="0 0 24 24">
                        <path d="M21 3H3V21H21V3ZM12 18C9.24 18 7 15.76 7 13C7 10.24 9.24 8 12 8C14.76 8 17 10.24 17 13C17 15.76 14.76 18 12 18ZM17.5 7.5C16.67 7.5 16 6.83 16 6C16 5.17 16.67 4.5 17.5 4.5C18.33 4.5 19 5.17 19 6C19 6.83 18.33 7.5 17.5 7.5Z"/>
                    </svg>
@@ -226,28 +354,22 @@ export default function App() {
                     </svg>
                 </a>
             </div>
-          </section>
-        </div>
+        </section>
       </div>
-    </StyleProvider>
+      {/* SEO: Main headline for the page */}
+      <h1>ABOUT PAGE TITLE HERE</h1> {/* TODO: Match this to the title above */}
+      {/* SEO: Structured Data (JSON-LD) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'AboutPage', // TODO: Use a more specific type if possible
+            'name': 'ABOUT PAGE TITLE HERE', // TODO: Match this to the title above
+            // ...add more fields as needed
+          }),
+        }}
+      />
+    </div>
   );
 }
-
-// A helper component to inject global styles needed for this effect.
-const StyleProvider = ({ children }) => (
-  <>
-    <style>{`
-      /* Essential styles for the scroll effect to work correctly */
-      body, html {
-        margin: 0;
-        padding: 0;
-        /* We allow y-scrolling to control the animation, but hide the horizontal scrollbar */
-        overflow-y: auto;
-        overflow-x: hidden;
-        background-color: #111827; /* Fallback background, matches the first color */
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-      }
-    `}</style>
-    {children}
-  </>
-);

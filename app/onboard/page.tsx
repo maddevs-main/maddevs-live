@@ -1,8 +1,14 @@
 "use client"
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 
-// Main component for the "Onboard" page
-export default function Onboard() {
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import CustomCursor from '@/components/Cursor';
+import gsap from 'gsap';
+import TextPlugin from 'gsap/TextPlugin';
+import { ScrollProgressBar } from '@/components/Scrollbar';
+
+gsap.registerPlugin(TextPlugin);
+// Metadata is now in page.metadata.ts (server-only)
+export default function OnboardPage() {
   // Refs for the elements to be animated
   const pageWrapperRef = useRef(null);
   const onboardRef = useRef(null);
@@ -34,46 +40,23 @@ export default function Onboard() {
   
   // Use useLayoutEffect to prevent flash of unstyled content before animation
   useLayoutEffect(() => {
-    const loadScript = (src) => {
-      return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) {
-          resolve(); return;
-        }
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`Script load error for ${src}`));
-        document.body.appendChild(script);
-      });
-    };
+    const allRefs = onboardRef.current && contentParaRef.current && formWrapperRef.current && pageWrapperRef.current;
+    if (allRefs) {
+      // Set initial states BEFORE making the page visible to prevent flashing
+      gsap.set(pageWrapperRef.current, { visibility: 'hidden' });
+      gsap.set(onboardRef.current, { text: "" });
+      gsap.set(contentParaRef.current, { xPercent: -100, autoAlpha: 0 });
+      gsap.set(formWrapperRef.current, { xPercent: 100 }); // Start form off-screen right
 
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js')
-      .then(() => loadScript('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/TextPlugin.min.js'))
-      .then(() => {
-        const gsap = window.gsap;
-        gsap.registerPlugin(window.TextPlugin);
-        
-        const allRefs = onboardRef.current && contentParaRef.current && formWrapperRef.current && pageWrapperRef.current;
+      // Now, make the page visible and start animations
+      gsap.set(pageWrapperRef.current, { visibility: 'visible' });
 
-        if (allRefs) {
-          // Set initial states BEFORE making the page visible to prevent flashing
-          gsap.set(pageWrapperRef.current, { visibility: 'hidden' });
-          gsap.set(onboardRef.current, { text: "" });
-          gsap.set(contentParaRef.current, { xPercent: -100, autoAlpha: 0 });
-          gsap.set(formWrapperRef.current, { xPercent: 100 }); // Start form off-screen right
-
-          // Now, make the page visible and start animations
-          gsap.set(pageWrapperRef.current, { visibility: 'visible' });
-
-          const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-          
-          tl.to(onboardRef.current, { duration: 2, text: "onboard", ease: "none" })
-            .to(contentParaRef.current, { duration: 1.2, xPercent: 0, autoAlpha: 1 }, "<0.3") // Fade in paragraph
-            .to(formWrapperRef.current, { duration: 1.2, xPercent: 0 }, "<"); // Slide in form
-        }
-      })
-      .catch(error => console.error("Failed to load GSAP scripts:", error));
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       
+      tl.to(onboardRef.current, { duration: 2, text: "onboard", ease: "none" })
+        .to(contentParaRef.current, { duration: 1.2, xPercent: 0, autoAlpha: 1 }, "<0.3") // Fade in paragraph
+        .to(formWrapperRef.current, { duration: 1.2, xPercent: 0 }, "<"); // Slide in form
+    }
   }, []);
 
   // Handle input changes
@@ -91,8 +74,7 @@ export default function Onboard() {
   const handleNextStep = () => {
       const { name, email, organisation, title, message } = formData;
       if (name && email && organisation && title && message) {
-          const gsap = window.gsap;
-          if(!gsap || !formWrapperRef.current) return;
+          if(!formWrapperRef.current) return;
           gsap.to(formWrapperRef.current, {
               duration: 0.6,
               xPercent: 100,
@@ -109,17 +91,20 @@ export default function Onboard() {
     e.preventDefault();
     if(!formData.date || !formData.time) return;
     setStatus((prevStatus) => ({ ...prevStatus, submitting: true }));
-    console.log('Final appointment data:', formData);
-
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       const newMeetingId = `MEETING-${Date.now().toString(36).toUpperCase()}`;
       setMeetingId(newMeetingId);
+      // Send data to backend, always seed approved: null
+      const response = await fetch('/api/onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, meetingId: newMeetingId, approved: null })
+      });
+      if (!response.ok) {
+        throw new Error('Failed to submit meeting request');
+      }
       setStatus({ submitted: true, submitting: false });
-      
-      const gsap = window.gsap;
-      if(!gsap || !formWrapperRef.current) return;
+      if(!formWrapperRef.current) return;
       gsap.to(formWrapperRef.current, {
           duration: 0.6,
           xPercent: 100,
@@ -127,14 +112,14 @@ export default function Onboard() {
           onComplete: () => setStep(3)
       });
     } catch (error) {
-      setStatus({ submitted: false, submitting: false, info: { error: true, msg: 'Something went wrong.' } });
+      setStatus({ submitted: false, submitting: false, info: { error: true, msg: error.message || 'Something went wrong.' } });
     }
   };
 
   // Animate steps sliding in when the `step` state changes
   useEffect(() => {
-    if (step > 1 && window.gsap && formWrapperRef.current) {
-        window.gsap.fromTo(formWrapperRef.current, 
+    if (step > 1 && formWrapperRef.current) {
+        gsap.fromTo(formWrapperRef.current, 
             { xPercent: 100 }, 
             { duration: 0.6, xPercent: 0, ease: "power3.out" }
         );
@@ -194,21 +179,41 @@ export default function Onboard() {
   }
 
   // Common class names and data
-  const inputClasses = "w-full bg-transparent border border-gray-600 text-gray-300 font-mono p-2 rounded-none focus:outline-none focus:border-gray-400 transition-colors duration-300 text-sm";
+  const inputClasses = "w-full bg-[transparent] border border-gray-600 text-gray-300 font-mono p-2 rounded-none focus:outline-none focus:border-gray-400 transition-colors duration-300 text-sm";
   const timePresetClasses = (isSelected) => `border font-mono uppercase tracking-wider text-xs rounded-none px-4 py-2 transition-all duration-300 ${isSelected ? 'bg-gray-300 text-gray-800' : 'border-gray-600 text-gray-400 hover:bg-gray-500 hover:text-gray-300'}`;
   const timePresets = ['09:00', '11:00', '14:00', '16:00'];
 
   return (
-    <div ref={pageWrapperRef} className="bg-[#241b1b] min-h-screen w-full flex flex-col justify-center font-sans text-gray-300 overflow-x-hidden" style={{ visibility: 'hidden' }}>
-      <div className="w-full">
-        <h1 ref={onboardRef} className="text-[15vw] sm:text-[18vw] md:text-[20vw] lg:text-[22vw] font-black text-gray-700 tracking-tighter lowercase relative text-right" style={{ right: '-2vw' }}></h1>
+
+    <div ref={pageWrapperRef} className="bg-[#241b1b] min-h-screen w-full flex flex-col justify-center font-sans text-gray-300 overflow-x-hidden" style={{visibility: 'hidden' }}>
+
+      <div className="w-full mt-20">
+        {/* SEO: Main headline for the page */}
+        {/* TODO: Match this to the title above */}
+        {/* SEO: Structured Data (JSON-LD) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebPage', // TODO: Use a more specific type if possible
+              'name': 'meeting onbaord appointment schedule', // TODO: Match this to the title above
+              // ...add more fields as needed
+            }),
+          }}
+        />
+        <h1 ref={onboardRef} className="text-[19vw] sm:text-[18vw] md:text-[20vw] lg:text-[22vw] font-black text-gray-700 tracking-tighter lowercase relative text-right" style={{ right: '-2vw' }}></h1><br></br>
         <div ref={contentParaRef} className="w-full -mt-2 sm:-mt-4 md:-mt-6 lg:-mt-8 pl-4 sm:pl-6 lg:pl-8">
-            <p className="font-mono text-sm sm:text-base max-w-2xl">our onboard process includes us having a discussion about your project and your requirements, a virtual meeting, a handshake, and voila!</p>
-            <p className="font-mono text-sm sm:text-base mt-2">you're in!</p>
+            <p className="font-mono text-sm sm:text-base max-w-2xl">Our onboarding process is simple, fast and very smooth.
+
+            We start with a virtual meetup, where we dive deep into your project, your goals, your vision—what your dream, your idea feels like, to you and to us. A handshake, and that’s it.
+
+</p>
+            <p className="font-mono text-sm sm:text-base mt-2">Welcome aboard.</p>
         </div>
         
-        <div className="w-full mt-8 md:mt-12 flex justify-end">
-            <div ref={formWrapperRef} className="bg-gray-700/50 backdrop-blur-sm p-6 sm:p-8 w-full max-w-md">
+        <div className="w-full mt-8 md:mt-12 flex justify-end" style={{paddingBottom: '3rem'}}>
+            <div ref={formWrapperRef} className="bg-gray-700/50 backdrop-blur-sm p-6 sm:p-8 w-full max-w-md" >
                 <div className="relative" style={{ minHeight: '450px' }}>
                     {/* Step 1: Initial Details */}
                     {step === 1 && (
@@ -263,6 +268,10 @@ export default function Onboard() {
         </div>
       </div>
       <style>{`.custom-time-picker::-webkit-calendar-picker-indicator { filter: invert(0.8) brightness(1); cursor: pointer; }`}</style>
+      <ScrollProgressBar />
+      <CustomCursor />
     </div>
+   
+    
   );
 }
