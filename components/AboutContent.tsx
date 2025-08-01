@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import * as THREE from 'three';
@@ -23,9 +23,9 @@ export default function AboutContent() {
   const mountRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
-  
+
   // Refs to manage animation state without causing re-renders
-  const cameraRef = useRef<THREE.Camera>();
+  const cameraRef = useRef<THREE.Camera | null>(null);
   const cameraTargetX = useRef(0); // Target X position for the camera based on scroll
   const cameraCurrentX = useRef(0); // Current X position, will ease towards the target
 
@@ -60,11 +60,11 @@ export default function AboutContent() {
     let previousTime = 0;
     const mount = mountRef.current;
 
-    const getImageData = (image: HTMLImageElement) => {
-      const canvas = document.createElement("canvas");
+    const getImageData = (image: HTMLImageElement): ImageData | null => {
+      const canvas = document.createElement('canvas');
       canvas.width = image.width;
       canvas.height = image.height;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext('2d');
       if (!ctx) return null;
       ctx.drawImage(image, 0, 0);
       return ctx.getImageData(0, 0, image.width, image.height);
@@ -74,7 +74,7 @@ export default function AboutContent() {
       const geometry = new THREE.BufferGeometry();
       const material = new THREE.PointsMaterial({
         size: 2,
-        color: 0x6B728E,
+        color: 0x6b728e,
         sizeAttenuation: false,
       });
 
@@ -84,8 +84,12 @@ export default function AboutContent() {
 
       for (let y = 0; y < imagedata.height; y += 2) {
         for (let x = 0; x < imagedata.width; x += 2) {
-          if (imagedata.data[(x * 4 + y * 4 * imagedata.width) + 3] > 128) {
-            vertices.push(Math.random() * 1000 - 500, Math.random() * 1000 - 500, -Math.random() * 500);
+          if (imagedata.data[x * 4 + y * 4 * imagedata.width + 3] > 128) {
+            vertices.push(
+              Math.random() * 1000 - 500,
+              Math.random() * 1000 - 500,
+              -Math.random() * 500
+            );
             destinations.push(x - imagedata.width / 2, -y + imagedata.height / 2, 0);
             speeds.push(Math.random() / 200 + 0.015);
           }
@@ -179,4 +183,4 @@ export default function AboutContent() {
       </div>
     </div>
   );
-} 
+}

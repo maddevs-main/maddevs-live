@@ -26,9 +26,11 @@ The backend will run on `http://localhost:4000` by default.
 ## API
 
 ### POST /api/onboard
+
 Save a meeting request to the database.
 
 **Request body:**
+
 ```
 {
   "name": "...",
@@ -44,21 +46,26 @@ Save a meeting request to the database.
 ```
 
 **Response:**
+
 - `201 Created` `{ success: true, id: ... }`
 - `400 Bad Request` if missing fields
-- `500 Server Error` on failure 
+- `500 Server Error` on failure
 
 ### GET /api/onboard/all
+
 Get all meeting requests.
 
 **Response:**
+
 - `200 OK` `{ meetings: [...] }`
 - `500 Server Error` on failure
 
 ### PATCH /api/onboard/:id/approve
+
 Approve or reject a meeting request.
 
 **Request body:**
+
 ```
 {
   "approved": true/false,
@@ -67,15 +74,18 @@ Approve or reject a meeting request.
 ```
 
 **Response:**
+
 - `200 OK` `{ success: true, onboard: {...} }`
 - `400 Bad Request` if approved is not boolean
 - `404 Not Found` if onboard not found
 - `500 Server Error` on failure
 
 ### PATCH /api/onboard/:id/done
+
 Mark a meeting as completed.
 
 **Request body:**
+
 ```
 {
   "done": true
@@ -83,6 +93,7 @@ Mark a meeting as completed.
 ```
 
 **Response:**
+
 - `200 OK` `{ success: true, onboard: {...} }`
 - `400 Bad Request` if done is not boolean
 - `404 Not Found` if onboard not found
@@ -119,36 +130,43 @@ module.exports = {
 
 ## Usage
 
-The mail service is used in the onboard POST endpoint to send a congratulatory email to the user after successful form submission. To use your own SMTP server, update the credentials in your `.env` file. 
+The mail service is used in the onboard POST endpoint to send a congratulatory email to the user after successful form submission. To use your own SMTP server, update the credentials in your `.env` file.
 
 # Security Features
 
 ## API Key Protection
+
 All sensitive API endpoints (POST, PUT, PATCH, DELETE) require an `x-api-key` header. The key must match the value of `API_SECRET_KEY` in your `.env` file.
 
 **Example:**
+
 ```
 POST /api/news
 x-api-key: s0m3Sup3rS3cr3t
 ```
 
 ## CORS Restriction
+
 Only requests from your frontend domain are allowed. Update the CORS origin in `server/index.js` as needed.
 
 ## Input Sanitization
+
 All user-provided fields are sanitized using `sanitize-html` to prevent injection attacks.
 
 ## Seed Route Protection
+
 Seed routes (`/api/blogs/seed`, `/api/news/seed`) are **disabled in production** (`NODE_ENV=production`).
 
 ## MongoDB Security
+
 - Use a strong password in your MongoDB URI.
 - Restrict access to the database using firewall rules or VPC.
 - Never expose your database to the public internet.
 
 ## .env Example
+
 ```
 MONGODB_URI=mongodb://username:strongpassword@host:port/dbname
 PORT=4000
 API_SECRET_KEY=s0m3Sup3rS3cr3t
-``` 
+```

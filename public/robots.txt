@@ -7,5 +7,6 @@ Disallow: /private/
 Disallow: /test/
 Disallow: /tmp/
 Disallow: /node_modules/
+Disallow: /alternatepamchange09/
 Allow: /
 Sitemap: /sitemap.xml 

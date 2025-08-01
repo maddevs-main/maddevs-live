@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useEffect, useRef, useState } from 'react';
 import NavOverlap from './NavOverlap';
 
@@ -14,13 +14,9 @@ declare global {
   }
 }
 
-
-
 // Main App component that renders the navbar
 
-
 //make it feature the l=custom loading progress bar
-
 
 export default function NavBar() {
   const appRouter = useAppRouter();
@@ -28,7 +24,6 @@ export default function NavBar() {
   const navRef = useRef<HTMLElement | null>(null);
   const [showNav, setShowNav] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-
 
   // Listen to scroll for hide/show navbar
   useEffect(() => {
@@ -277,34 +272,39 @@ export default function NavBar() {
           }
         }
       `}</style>
-      
-     
+
       <nav ref={navRef} className={`navbar${showNav ? ' show' : ' hide'}`}>
         <div className="nav-left">
-          <button
-            className="nav-button"
-            onClick={() => appRouter.push('/onboard')}
-          >
-            <Image src="/assets/create.svg" alt="Web design create icon for UI/UX and creative development" width={52} height={62} />
+          <button className="nav-button" onClick={() => appRouter.push('/onboard')}>
+            <Image
+              src="/assets/create.svg"
+              alt="Web design create icon for UI/UX and creative development"
+              width={52}
+              height={62}
+            />
             <span>create</span>
           </button>
         </div>
         <div className="nav-center">
-          <div className="logo"><Link href="/">md.</Link></div>
+          <div className="logo">
+            <Link href="/">md.</Link>
+          </div>
         </div>
         <div className="nav-right">
-          <button
-            className="menu-button"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            
+          <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)}>
             <span className="menu-text">menu</span>
-            <Image src="/assets/menu.svg" alt="Web design menu icon for UI/UX and creative development" width={62} height={52} />
+            <Image
+              src="/assets/menu.svg"
+              alt="Web design menu icon for UI/UX and creative development"
+              width={62}
+              height={52}
+            />
           </button>
         </div>
       </nav>
-      {menuOpen && <NavOverlap onClose={() => setMenuOpen(false)} closeIconPath="/assets/close.svg" />}
-     
+      {menuOpen && (
+        <NavOverlap onClose={() => setMenuOpen(false)} closeIconPath="/assets/close.svg" />
+      )}
     </>
   );
 }

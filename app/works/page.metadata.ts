@@ -1,17 +1,19 @@
 export const generateMetadata = async () => ({
-  title: 'WORKS PAGE TITLE HERE', // TODO: Fill in unique title
-  description: 'WORKS PAGE DESCRIPTION HERE', // TODO: Fill in unique description
+  title: 'works/maddevs - creative web design & development',
+  description:
+    'A curated showcase of our collaborative web design and development work. At maddevs, we craft expressive digital experiences—custom websites, intuitive interfaces, and intelligent systems—designed to feel as good as they function. Explore how we shape vision into reality through purposeful design and empathetic engineering.',
   openGraph: {
-    title: 'WORKS PAGE TITLE HERE',
-    description: 'WORKS PAGE DESCRIPTION HERE',
+    title: 'works/maddevs - creative web design & development',
+    description:
+      'Browse the digital portfolio of maddevs—where creativity meets precision. We design and build custom websites, immersive experiences, and intelligent web platforms that express your brand with clarity and impact.',
     url: 'https://maddevs.in/works',
-    siteName: 'MadDevs',
+    siteName: 'maddevs',
     images: [
       {
-        url: 'https://maddevs.in/assets/media/design_2.png', // TODO: Use a relevant image for this page
+        url: 'https://maddevs.in/assets/media/web_design_two.png',
         width: 1200,
         height: 630,
-        alt: 'Portfolio, web development, UI/UX, creative projects',
+        alt: 'maddevs digital portfolio – creative studio web design and development',
       },
     ],
     locale: 'en_US',
@@ -19,12 +21,13 @@ export const generateMetadata = async () => ({
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'WORKS PAGE TITLE HERE',
-    description: 'WORKS PAGE DESCRIPTION HERE',
+    title: 'works/maddevs - creative web design & development',
+    description:
+      'Explore our digital portfolio—a selection of intentional, human-centered websites and platforms by maddevs. We build expressive web experiences that connect, convert, and evolve.',
     site: '@maddevs_in',
     creator: '@maddevs_in',
-    images: ['https://maddevs.in/assets/media/design_2.png'],
+    images: ['https://maddevs.in/assets/media/web_design_two.png'],
   },
 });
- 
-export default generateMetadata; 
+
+export default generateMetadata;

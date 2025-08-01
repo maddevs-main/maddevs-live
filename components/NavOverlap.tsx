@@ -1,11 +1,11 @@
+'use client';
 import React, { useEffect, useRef, useState } from 'react';
 import Lenis from '@studio-freight/lenis'; //switch to gsap
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useEffect as useLayoutEffect, useRef as useLayoutRef } from 'react';
 import gsap from 'gsap';
 import CustomCursor from './Cursor';
-
 
 interface NavItemProps {
   primary: string;
@@ -84,7 +84,9 @@ export default function NavOverlap({ onClose, closeIconPath }: NavOverlapProps) 
   return (
     <>
       <style jsx global>{`
-        html, body, #__next {
+        html,
+        body,
+        #__next {
           height: 100%;
           margin: 0;
           padding: 0;
@@ -92,7 +94,7 @@ export default function NavOverlap({ onClose, closeIconPath }: NavOverlapProps) 
         body {
           min-height: 100vh;
           height: 100vh;
-         
+
           overflow: hidden;
         }
         .fullscreen-nav {
@@ -107,7 +109,7 @@ export default function NavOverlap({ onClose, closeIconPath }: NavOverlapProps) 
           top: 0;
           left: 0;
           z-index: 1000;
-          background: #0D0D0D;
+          background: #0d0d0d;
         }
         .nav-top-bar {
           position: absolute;
@@ -120,15 +122,16 @@ export default function NavOverlap({ onClose, closeIconPath }: NavOverlapProps) 
           padding: 2vw 3vw 0 3vw;
           z-index: 1100;
         }
-        .nav-back-btn, .nav-close-btn {
-          background: rgba(238,238,238,0.95); 
-          color: #0D0D0D;
+        .nav-back-btn,
+        .nav-close-btn {
+          background: rgba(238, 238, 238, 0.95);
+          color: #0d0d0d;
           border: none;
           font-size: 1.8rem;
           overflow: hidden;
           font-weight: 700;
           border-radius: 0;
-          padding: 0.2vw 1.0vw;
+          padding: 0.2vw 1vw;
           cursor: pointer;
           transition: background 0.2s;
         }
@@ -138,12 +141,12 @@ export default function NavOverlap({ onClose, closeIconPath }: NavOverlapProps) 
         }
         .nav-close-btn {
           background: #222222;
-          color:rgb(224, 224, 224);
+          color: rgb(224, 224, 224);
         }
         .text {
           font-size: 16vw;
           font-weight: 700;
-          letter-spacing: -.01em;
+          letter-spacing: -0.01em;
           line-height: 100%;
           margin: 0;
           width: 100vw;
@@ -152,7 +155,7 @@ export default function NavOverlap({ onClose, closeIconPath }: NavOverlapProps) 
           -webkit-background-clip: text;
           background-clip: text;
           background-size: 100%;
-          border-bottom: 1px solid #2F2B28;
+          border-bottom: 1px solid #2f2b28;
           display: flex;
           flex-direction: column;
           align-items: start;
@@ -176,13 +179,13 @@ export default function NavOverlap({ onClose, closeIconPath }: NavOverlapProps) 
           position: absolute;
           width: 100%;
           height: 100%;
-          background-color:rgb(224, 0, 0);
-          color: #0D0D0D;
+          background-color: rgb(224, 0, 0);
+          color: #0d0d0d;
           clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
           transform-origin: center;
-          transition: all cubic-bezier(.1,.5,.5,1) 0.4s;
+          transition: all cubic-bezier(0.1, 0.5, 0.5, 1) 0.4s;
           display: flex;
-         top: 0em;
+          top: 0em;
           flex-direction: column;
           justify-content: end;
           align-items: end;
@@ -200,11 +203,22 @@ export default function NavOverlap({ onClose, closeIconPath }: NavOverlapProps) 
           {/* Back button only in submenu */}
           <button
             className="nav-back-btn"
-            style={{ visibility: menu !== 'main' ? 'visible' : 'hidden', display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 0 }}
+            style={{
+              visibility: menu !== 'main' ? 'visible' : 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              paddingLeft: 0,
+            }}
             onClick={() => setMenu('main')}
             disabled={menu === 'main'}
           >
-            <Image src="/assets/back.svg" alt="Web design back navigation icon for UI/UX and creative development" width={30} height={60} />
+            <Image
+              src="/assets/back.svg"
+              alt="Web design back navigation icon for UI/UX and creative development"
+              width={30}
+              height={60}
+            />
             <span>back</span>
           </button>
           {/* Close button always visible */}
@@ -212,31 +226,48 @@ export default function NavOverlap({ onClose, closeIconPath }: NavOverlapProps) 
             className="nav-close-btn"
             onClick={handleClose}
             aria-label="Close menu"
-            style={{ display: 'flex', alignItems: 'center', gap: 10, paddingRight: 10, paddingLeft: 10, paddingTop: 5, paddingBottom: 5 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              paddingRight: 10,
+              paddingLeft: 10,
+              paddingTop: 5,
+              paddingBottom: 5,
+            }}
           >
             <span>close</span>
             {closeIconPath && (
-              <Image src={closeIconPath.replace('.png', '.svg')} alt="Web design close navigation icon for UI/UX and creative development" width={54}  height={30} />
+              <Image
+                src={closeIconPath.replace('.png', '.svg')}
+                alt="Web design close navigation icon for UI/UX and creative development"
+                width={54}
+                height={30}
+              />
             )}
           </button>
         </div>
         {menu === 'main' && (
           <>
-            <NavItem primary="home"  onClick={() => router.push('/')} secondary="enter" />
-            <NavItem primary="services"  onClick={() => router.push('/services')} href="/services" secondary="enter" />
-            <NavItem primary="onboard" onClick={() => router.push('/onboard')} href="/onboard" secondary="/create" />
-            <NavItem primary="works" onClick={() => router.push('/works')} href="/works" secondary="enter" />
-            <NavItem primary="products" onClick={() => router.push('/products')} href="/products" secondary="enter" />
+            <NavItem primary="home" onClick={() => router.push('/')} secondary="enter" />
             <NavItem
-              primary="about"
-              secondary="/contact"
-              onClick={() => router.push('/about')}
-            />
-            <NavItem
-              primary="releases"
+              primary="services"
+              onClick={() => router.push('/services')}
               secondary="enter"
-              onClick={() => setMenu('releases')}
             />
+            <NavItem
+              primary="onboard"
+              onClick={() => router.push('/onboard')}
+              secondary="/create"
+            />
+            <NavItem primary="works" onClick={() => router.push('/works')} secondary="enter" />
+            <NavItem
+              primary="products"
+              onClick={() => router.push('/products')}
+              secondary="enter"
+            />
+            <NavItem primary="about" secondary="/contact" onClick={() => router.push('/about')} />
+            <NavItem primary="releases" secondary="enter" onClick={() => setMenu('releases')} />
           </>
         )}
         {menu === 'releases' && (
@@ -246,9 +277,8 @@ export default function NavOverlap({ onClose, closeIconPath }: NavOverlapProps) 
           </>
         )}
       </div>
- 
     </>
   );
 }
 
-//labels for each products; 
+//labels for each products;

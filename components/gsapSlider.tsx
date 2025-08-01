@@ -37,7 +37,7 @@ export default function HorizontalScrollTease({ children }: Props) {
   return (
     <div
       ref={containerRef}
-      className="flex overflow-x-auto snap-x snap-mandatory w-screen h-screen scroll-smooth"
+      className="flex overflow-x-auto snap-x snap-mandatory w-screen h-screen scroll-smooth no-overscroll horizontal-scroll"
     >
       {children}
     </div>

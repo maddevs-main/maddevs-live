@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import React, { useLayoutEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
@@ -16,10 +16,7 @@ interface NewsPost {
   tags: string[];
 }
 
-console.log('ClientAnimatedNewsPage module loaded');
-
 export default function ClientAnimatedNewsPage({ post }: { post: NewsPost }) {
-  console.log('ClientAnimatedNewsPage rendered', post?.title);
   const router = useRouter();
   const articleRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -27,7 +24,8 @@ export default function ClientAnimatedNewsPage({ post }: { post: NewsPost }) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (!articleRef.current || !titleRef.current || !subtitleRef.current || !contentRef.current) return;
+    if (!articleRef.current || !titleRef.current || !subtitleRef.current || !contentRef.current)
+      return;
     // Set initial state
     gsap.set(articleRef.current, {
       rotationY: -90,
@@ -53,10 +51,21 @@ export default function ClientAnimatedNewsPage({ post }: { post: NewsPost }) {
     const titleDuration = 0.25;
     const subtitleDuration = 0.25;
     const contentDuration = 0.5;
-    masterTl.to(titleRef.current, { duration: titleDuration, text: originalTitle, ease: 'linear' }, 0.2)
-      .to(subtitleRef.current, { duration: subtitleDuration, text: originalSubtitle, ease: 'linear' }, ">")
-      .to(contentRef.current, { duration: contentDuration, text: originalContent, ease: 'linear' }, ">-");
-    return () => { masterTl.kill(); };
+    masterTl
+      .to(titleRef.current, { duration: titleDuration, text: originalTitle, ease: 'linear' }, 0.2)
+      .to(
+        subtitleRef.current,
+        { duration: subtitleDuration, text: originalSubtitle, ease: 'linear' },
+        '>'
+      )
+      .to(
+        contentRef.current,
+        { duration: contentDuration, text: originalContent, ease: 'linear' },
+        '>-'
+      );
+    return () => {
+      masterTl.kill();
+    };
   }, [post]);
 
   const handleBack = () => {
@@ -64,21 +73,22 @@ export default function ClientAnimatedNewsPage({ post }: { post: NewsPost }) {
     const tl = gsap.timeline({
       onComplete: () => router.back(),
     });
-    tl.to(
-      [titleRef.current, subtitleRef.current, contentRef.current],
-      {
-        autoAlpha: 0,
-        duration: 0.3,
-        stagger: 0.05,
-      }
-    );
-    tl.to(articleRef.current, {
-      rotationY: -90,
+    tl.to([titleRef.current, subtitleRef.current, contentRef.current], {
       autoAlpha: 0,
-      duration: 1,
-      ease: 'power3.inOut',
-      transformOrigin: 'left center',
-    }, 0);
+      duration: 0.3,
+      stagger: 0.05,
+    });
+    tl.to(
+      articleRef.current,
+      {
+        rotationY: -90,
+        autoAlpha: 0,
+        duration: 1,
+        ease: 'power3.inOut',
+        transformOrigin: 'left center',
+      },
+      0
+    );
   };
 
   return (
@@ -96,13 +106,33 @@ export default function ClientAnimatedNewsPage({ post }: { post: NewsPost }) {
           NEWS/
         </button>
         <div className="w-full h-64 md:h-96 bg-gray-200 mb-8" data-flip-id={`image-${post.id}`}>
-          <img src={post.imageUrl} alt={`Web development and creative design news image: ${post.title}`} className="w-full h-full object-cover" loading="lazy" />
+          <img
+            src={post.imageUrl}
+            alt={`Web development and creative design news image: ${post.title}`}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
         </div>
-        <div data-flip-id={`content-${post.id}`}> 
-          <h1 ref={titleRef} data-article-title className="text-3xl sm:text-4xl md:text-6xl font-bold uppercase tracking-wider" style={{ minHeight: 44 }}></h1>
-          <p ref={subtitleRef} data-article-subtitle className="mt-4 text-lg sm:text-xl md:text-2xl tracking-widest" style={{ minHeight: 24 }}></p>
+        <div data-flip-id={`content-${post.id}`}>
+          <h1
+            ref={titleRef}
+            data-article-title
+            className="text-3xl sm:text-4xl md:text-6xl font-bold uppercase tracking-wider"
+            style={{ minHeight: 44 }}
+          ></h1>
+          <p
+            ref={subtitleRef}
+            data-article-subtitle
+            className="mt-4 text-lg sm:text-xl md:text-2xl tracking-widest"
+            style={{ minHeight: 24 }}
+          ></p>
           <div className="my-8 border-t-2 border-dashed border-black"></div>
-          <div ref={contentRef} data-article-content className="text-base md:text-lg leading-relaxed whitespace-pre-line" style={{ minHeight: 60 }}></div>
+          <div
+            ref={contentRef}
+            data-article-content
+            className="text-base md:text-lg leading-relaxed whitespace-pre-line"
+            style={{ minHeight: 60 }}
+          ></div>
         </div>
         <div style={{ margin: '24px 0' }}>
           <strong>Tags:</strong> {post.tags && post.tags.length > 0 ? post.tags.join(', ') : 'None'}
@@ -110,4 +140,4 @@ export default function ClientAnimatedNewsPage({ post }: { post: NewsPost }) {
       </div>
     </div>
   );
-} 
+}

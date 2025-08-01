@@ -9,13 +9,25 @@ function getCalendarLinks({ name, email, organisation, title, message, date, tim
   // date: YYYY-MM-DD, time: HH:mm
   const start = new Date(`${date}T${time}:00`);
   const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour meeting
-  function pad(n) { return n < 10 ? '0' + n : n; }
+  function pad(n) {
+    return n < 10 ? '0' + n : n;
+  }
   function formatCalDate(d) {
-    return d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + '00Z';
+    return (
+      d.getUTCFullYear() +
+      pad(d.getUTCMonth() + 1) +
+      pad(d.getUTCDate()) +
+      'T' +
+      pad(d.getUTCHours()) +
+      pad(d.getUTCMinutes()) +
+      '00Z'
+    );
   }
   const startStr = formatCalDate(start);
   const endStr = formatCalDate(end);
-  const details = encodeURIComponent(`Organisation: ${organisation}\nTitle: ${title}\nMessage: ${message}\nMeeting ID: ${meetingId}`);
+  const details = encodeURIComponent(
+    `Organisation: ${organisation}\nTitle: ${title}\nMessage: ${message}\nMeeting ID: ${meetingId}`
+  );
   const location = encodeURIComponent('Online');
   const gcal = `https://www.google.com/calendar/render?action=TEMPLATE&text=Onboarding+Meeting+with+${encodeURIComponent(name)}&dates=${startStr}/${endStr}&details=${details}&location=${location}`;
   // Proper ICS file content for Apple Calendar
@@ -27,7 +39,7 @@ async function sendOnboardCongratsMail(to, name, formData) {
   const mailOptions = {
     from: config.mail.from,
     to,
-    subject: 'Onboard Meeting Request Submitted',
+    subject: 'meeting requested - welcome',
     html: templates.getOnboardCongratsMailHTML({ ...formData, name }),
   };
   try {
@@ -43,7 +55,7 @@ async function sendMeetingRequestMail(formData) {
   const mailOptions = {
     from: config.mail.from,
     to: config.mail.from, // send to ourselves; change if needed
-    subject: `New Onboard Request Received - ${formData.organisation} - ${formData.name}`,
+    subject: `[new] onboard request - ${formData.name || 'User'}@${formData.organisation || 'Organisation'}`,
     html: templates.getMeetingRequestMailHTML(formData),
   };
   try {
@@ -60,7 +72,7 @@ async function sendOnboardConfirmedMail(to, name, formData) {
   const mailOptions = {
     from: config.mail.from,
     to,
-    subject: 'Your Meeting is Confirmed!',
+    subject: 'meeting confirmed/accepted - welcome',
     html: templates.getOnboardConfirmedMailHTML({ ...formData, name }, gcal, ical),
   };
   try {
@@ -76,7 +88,7 @@ async function sendOnboardRejectedMail(to, name, formData) {
   const mailOptions = {
     from: config.mail.from,
     to,
-    subject: `Meeting Request Rejected - ${formData.organisation} - ${formData.name}`,
+    subject: `meeting denied - ${formData.organisation} - ${formData.name}`,
     html: templates.getOnboardRejectedMailHTML({ ...formData, name }),
   };
   try {
@@ -92,7 +104,7 @@ async function sendOnboardDoneMail(to, name, formData) {
   const mailOptions = {
     from: config.mail.from,
     to,
-    subject: `Meeting Completed - ${formData.organisation} - ${formData.name}`,
+    subject: `meeting completed - ${formData.organisation} - ${formData.name}`,
     html: templates.getOnboardDoneMailHTML({ ...formData, name }),
   };
   try {
@@ -108,7 +120,7 @@ async function sendMeetingStatusMail(formData, status) {
   const mailOptions = {
     from: config.mail.from,
     to: config.mail.from, // send to ourselves; change if needed
-    subject: `Meeting ${status} - ${formData.organisation} - ${formData.name}`,
+    subject: `onboard ${status} - ${formData.name} @ ${formData.organisation} `,
     html: templates.getMeetingStatusMailHTML(formData, status),
   };
   try {
@@ -126,5 +138,5 @@ module.exports = {
   sendOnboardConfirmedMail,
   sendOnboardRejectedMail,
   sendOnboardDoneMail,
-  sendMeetingStatusMail
-}; 
+  sendMeetingStatusMail,
+};

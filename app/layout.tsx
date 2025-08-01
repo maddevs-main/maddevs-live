@@ -1,30 +1,38 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
 import StyledComponentsRegistry from '../lib/registry';
 import dynamic from 'next/dynamic';
-import GsapSmoothScroll from '../components/GsapSmoothScroll';
+import CustomCursor from '@/components/Cursor';
+import { ScrollProgressBar } from '@/components/Scrollbar';
 
 // Lazy load components
 const NavBar = dynamic(() => import('../components/NavBar'), {
   loading: () => <div className="h-16 bg-gray-100 animate-pulse" />,
-  ssr: true
+  ssr: true,
 });
 
-const FooterWrapper = dynamic(() => import("@/components/FooterWrapper"), {
+const FooterWrapper = dynamic(() => import('@/components/FooterWrapper'), {
   loading: () => <div className="h-32 bg-gray-100 animate-pulse" />,
-  ssr: true
+  ssr: true,
 });
 
 const NavigationProgressWrapper = dynamic(() => import('../components/NavigationProgressWrapper'), {
-  ssr: true
+  ssr: true,
 });
 
 export const metadata = {
   title: {
-    template: '%s | SITE NAME HERE',
-    default: 'SITE NAME HERE',
+    template: '%s | maddevs - home',
+    default: 'maddevs - creative web experience design & development',
   },
-  description: 'SITE DESCRIPTION HERE',
+  description: 'creative web experience design & development | user experience & interface design',
+
+  icons: {
+    // Use your logo instead of favicon.ico
+    icon: [{ url: '/logo.svg', type: 'image/svg+xml' }],
+    apple: '/logo.svg',
+    shortcut: '/logo.svg',
+  },
 };
 
 export default function RootLayout({
@@ -34,12 +42,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        />
+      </head>
       <body className="antialiased">
         <StyledComponentsRegistry>
-          <GsapSmoothScroll />
-         
           <NavBar />
           <NavigationProgressWrapper />
+          <CustomCursor />
+          <ScrollProgressBar />
           {children}
           <FooterWrapper />
         </StyledComponentsRegistry>
@@ -48,3 +62,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+//

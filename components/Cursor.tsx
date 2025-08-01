@@ -1,24 +1,46 @@
-import React, { useEffect, useState, useCallback } from 'react';
+'use client';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+
+interface MenuItem {
+  label: string;
+  action: () => void;
+}
+
+interface MenuState {
+  visible: boolean;
+  x: number;
+  y: number;
+  items: MenuItem[];
+}
 
 // User's CustomCursor component, now with a dynamic context menu
 export default function CustomCursor() {
   // State to manage the context menu's visibility, position, and items
-  const [menu, setMenu] = useState({
+  const [menu, setMenu] = useState<MenuState>({
     visible: false,
     x: 0,
     y: 0,
     items: [],
   });
 
+  // Add refs to track mounted state and cleanup
+  const isMountedRef = useRef(true);
+  const cleanupFunctionsRef = useRef<(() => void)[]>([]);
+
   // --- Global Click to Hide Menu ---
-  const handleGlobalClick = useCallback((e) => {
-      if (menu.visible && !e.target.closest('#custom-context-menu')) {
-          setMenu(prev => ({ ...prev, visible: false }));
+  const handleGlobalClick = useCallback(
+    (e: MouseEvent) => {
+      if (menu.visible && !(e.target as Element).closest('#custom-context-menu')) {
+        setMenu(prev => ({ ...prev, visible: false }));
       }
-  }, [menu.visible]);
+    },
+    [menu.visible]
+  );
 
   // --- Main Effect Hook ---
   useEffect(() => {
+    isMountedRef.current = true;
+
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const cursorContainer = document.getElementById('custom-cursor-container');
 
@@ -27,67 +49,106 @@ export default function CustomCursor() {
       return;
     }
 
-    const cursor = document.getElementById("custom-cursor-circle");
-    const indicator = document.getElementById("scroll-indicator");
-    const cursorVisuals = document.getElementById("cursor-visual-container"); // New container for blend mode
-    let scrollTimeout;
+    const cursor = document.getElementById('custom-cursor-circle');
+    const indicator = document.getElementById('scroll-indicator');
+    const cursorVisuals = document.getElementById('cursor-visual-container');
+    let scrollTimeout: NodeJS.Timeout;
 
     // --- Event Handlers ---
-    const moveCursor = (e) => {
+    const moveCursor = (e: MouseEvent) => {
+      if (!isMountedRef.current) return;
+
       const { clientX, clientY, target } = e;
-      
+
       // Move the entire container
       if (cursorContainer) {
         cursorContainer.style.transform = `translate3d(${clientX}px, ${clientY}px, 0)`;
       }
 
-      const textSelector = 'p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, code, span, label, input[type="text"], input[type="email"], input[type="search"], input[type="password"], input[type="url"], textarea, [contenteditable="true"]';
-      const closestLink = target.closest('a');
-      const isButton = target.closest('button');
-      const isContextMenu = target.closest('#custom-context-menu'); // Check for context menu
+      const textSelector =
+        'p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, code, span, label, input[type="text"], input[type="email"], input[type="search"], input[type="password"], input[type="url"], textarea, [contenteditable="true"]';
+      const closestLink = (target as Element).closest('a');
+      const isButton = (target as Element).closest('button');
+      const isContextMenu = (target as Element).closest('#custom-context-menu');
+      const isNavItem = (target as Element).closest('.text'); // Add this line to detect NavItem elements
 
       // Reset classes and styles first
-      cursor.classList.remove('text-hover', 'link-hover');
-      indicator.style.opacity = '1';
+      if (cursor) {
+        cursor.classList.remove('text-hover', 'link-hover');
+      }
+      if (indicator) {
+        indicator.style.opacity = '1';
+      }
 
       // Apply new state if not hovering over the context menu
       if (isContextMenu) {
         // Keep default cursor over the menu
-      } else if (closestLink) {
+      } else if (isNavItem) {
+        // Keep normal cursor for NavItem elements - don't add any special classes
+      } else if (closestLink && cursor) {
         cursor.classList.add('link-hover');
-        indicator.style.opacity = '0';
-      } else if (target.matches(textSelector) && !isButton) {
+        if (indicator) indicator.style.opacity = '0';
+      } else if ((target as Element).matches(textSelector) && !isButton && cursor) {
         cursor.classList.add('text-hover');
-        indicator.style.opacity = '0';
+        if (indicator) indicator.style.opacity = '0';
       }
     };
 
-    const detectScroll = (e) => {
-      if (!indicator || !cursor) return;
+    const detectScroll = (e: WheelEvent) => {
+      if (!isMountedRef.current || !indicator || !cursor) return;
       clearTimeout(scrollTimeout);
-      indicator.classList.remove("scrolling-up", "scrolling-down");
-      cursor.classList.add("scrolling");
 
-      if (e.deltaY > 0) {
-        indicator.classList.add("scrolling-down");
+      // Remove all scroll classes
+      indicator.classList.remove(
+        'scrolling-up',
+        'scrolling-down',
+        'scrolling-left',
+        'scrolling-right'
+      );
+      cursor.classList.add('scrolling');
+
+      // Check for horizontal scrolling (shift + wheel or trackpad horizontal scroll)
+      if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        // Horizontal scrolling
+        if (e.deltaX > 0 || (e.shiftKey && e.deltaY > 0)) {
+          indicator.classList.add('scrolling-right');
+        } else {
+          indicator.classList.add('scrolling-left');
+        }
       } else {
-        indicator.classList.add("scrolling-up");
+        // Vertical scrolling
+        if (e.deltaY > 0) {
+          indicator.classList.add('scrolling-down');
+        } else {
+          indicator.classList.add('scrolling-up');
+        }
       }
 
       scrollTimeout = setTimeout(() => {
-        indicator.classList.remove("scrolling-up", "scrolling-down");
-        cursor.classList.remove("scrolling");
+        if (isMountedRef.current && indicator && cursor) {
+          indicator.classList.remove(
+            'scrolling-up',
+            'scrolling-down',
+            'scrolling-left',
+            'scrolling-right'
+          );
+          cursor.classList.remove('scrolling');
+        }
       }, 400);
     };
 
     const handleClick = () => {
-      if (!cursor) return;
-      cursor.classList.add("clicking");
-      setTimeout(() => cursor.classList.remove("clicking"), 150);
+      if (!isMountedRef.current || !cursor) return;
+      cursor.classList.add('clicking');
+      setTimeout(() => {
+        if (isMountedRef.current && cursor) {
+          cursor.classList.remove('clicking');
+        }
+      }, 150);
     };
 
     // --- Clipboard Helper ---
-    const copyToClipboard = (text) => {
+    const copyToClipboard = (text: string) => {
       const textArea = document.createElement('textarea');
       textArea.value = text;
       textArea.style.position = 'fixed';
@@ -97,36 +158,51 @@ export default function CustomCursor() {
       try {
         document.execCommand('copy');
       } catch (err) {
-        console.error('Fallback: Oops, unable to copy', err);
+
       }
-      document.body.removeChild(textArea);
+      // Safe removal with existence check
+      if (document.body.contains(textArea)) {
+        document.body.removeChild(textArea);
+      }
     };
 
     // --- Action Wrapper (to close menu after action) ---
-    const createAction = (func) => () => {
+    const createAction = (func: () => void) => () => {
       func();
       setMenu(prev => ({ ...prev, visible: false }));
     };
 
     // --- Right Click Handler ---
-    const handleRightClick = (e) => {
+    const handleRightClick = (e: MouseEvent) => {
       e.preventDefault();
-      if (!cursor) return;
-      
-      const target = e.target;
-      const newMenuItems = [];
+      if (!isMountedRef.current || !cursor) return;
+
+      const target = e.target as Element;
+      const newMenuItems: Array<{ label: string; action: () => void }> = [];
       const closestLink = target.closest('a');
 
       if (closestLink && closestLink.href) {
-        newMenuItems.push({ label: 'Open Link in New Tab', action: createAction(() => window.open(closestLink.href, '_blank')) });
-        newMenuItems.push({ label: 'Copy Link Address', action: createAction(() => copyToClipboard(closestLink.href)) });
-      } else if (target.innerText && target.innerText.trim() !== '') {
-        newMenuItems.push({ label: 'Copy Text', action: createAction(() => copyToClipboard(target.innerText)) });
+        newMenuItems.push({
+          label: 'Open Link in New Tab',
+          action: createAction(() => window.open(closestLink.href, '_blank')),
+        });
+        newMenuItems.push({
+          label: 'Copy Link Address',
+          action: createAction(() => copyToClipboard(closestLink.href)),
+        });
+      } else if (target.textContent && target.textContent.trim() !== '') {
+        newMenuItems.push({
+          label: 'Copy Text',
+          action: createAction(() => copyToClipboard(target.textContent || '')),
+        });
       }
-      
-      newMenuItems.push({ label: 'Reload Page', action: createAction(() => window.location.reload()) });
 
-      const menuWidth = 180; 
+      newMenuItems.push({
+        label: 'Reload Page',
+        action: createAction(() => window.location.reload()),
+      });
+
+      const menuWidth = 180;
       const menuHeight = newMenuItems.length * 40;
       let x = e.clientX;
       let y = e.clientY;
@@ -139,25 +215,36 @@ export default function CustomCursor() {
       }
 
       setMenu({ visible: true, x, y, items: newMenuItems });
-      cursor.classList.add("right-click");
-      setTimeout(() => cursor.classList.remove("right-click"), 400);
+      cursor.classList.add('right-click');
+      setTimeout(() => {
+        if (isMountedRef.current && cursor) {
+          cursor.classList.remove('right-click');
+        }
+      }, 400);
     };
-    
+
     // Add event listeners
-    window.addEventListener("mousemove", moveCursor);
-    window.addEventListener("wheel", detectScroll, { passive: true });
-    window.addEventListener("click", handleClick);
-    window.addEventListener("contextmenu", handleRightClick);
+    window.addEventListener('mousemove', moveCursor);
+    window.addEventListener('wheel', detectScroll, { passive: true });
+    window.addEventListener('click', handleClick);
+    window.addEventListener('contextmenu', handleRightClick);
     document.addEventListener('click', handleGlobalClick);
+
+    // Store cleanup functions
+    cleanupFunctionsRef.current = [
+      () => window.removeEventListener('mousemove', moveCursor),
+      () => window.removeEventListener('wheel', detectScroll),
+      () => window.removeEventListener('click', handleClick),
+      () => window.removeEventListener('contextmenu', handleRightClick),
+      () => document.removeEventListener('click', handleGlobalClick),
+      () => clearTimeout(scrollTimeout),
+    ];
 
     // Cleanup function
     return () => {
-      window.removeEventListener("mousemove", moveCursor);
-      window.removeEventListener("wheel", detectScroll);
-      window.removeEventListener("click", handleClick);
-      window.removeEventListener("contextmenu", handleRightClick);
-      document.removeEventListener('click', handleGlobalClick);
-      clearTimeout(scrollTimeout);
+      isMountedRef.current = false;
+      cleanupFunctionsRef.current.forEach(cleanup => cleanup());
+      cleanupFunctionsRef.current = [];
     };
   }, [handleGlobalClick]);
 
@@ -196,7 +283,7 @@ export default function CustomCursor() {
           height: 30px;
           border-radius: 50%;
           border: 1px solid white;
-          background-color: rgba(255, 255, 255, 0.8);
+          background-color: rgba(0, 0, 0, 0.68);
           transform: translate(-50%, -50%);
           transition: transform 0.2s ease, background-color 0.3s ease, border-color 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
         }
@@ -253,10 +340,10 @@ export default function CustomCursor() {
           transform: translate(-50%, -50%); /* Reset any scaling */
         }
         #custom-cursor-circle.text-hover {
-          width: 2px;
-          height: 28px;
+             width: 4px;
+          height: 48px;
           border-radius: 1px;
-          background-color: white;
+          background-color: black;
           border-color: white;
           transform: translate(-50%, -50%);
         }
@@ -275,16 +362,26 @@ export default function CustomCursor() {
         }
         #custom-cursor-circle.scrolling {
           transform: translate(-50%, -50%) scale(1.2);
-          border-color: white;
+          border-color: red;
         }
         #custom-cursor-circle.text-hover.scrolling {
            transform: translate(-50%, -50%) scale(1.2);
         }
+        
+        /* Vertical scroll indicators */
         #scroll-indicator.scrolling-up {
-          border-top-color: white;
+          border-top-color: red;
         }
         #scroll-indicator.scrolling-down {
-          border-bottom-color: white;
+          border-bottom-color: red;
+        }
+        
+        /* Horizontal scroll indicators */
+        #scroll-indicator.scrolling-left {
+          border-left-color: red;
+        }
+        #scroll-indicator.scrolling-right {
+          border-right-color: red;
         }
       `}</style>
 
@@ -292,22 +389,22 @@ export default function CustomCursor() {
       <div id="custom-cursor-container">
         {/* This new container handles the blend mode and z-index to keep the cursor on top */}
         <div id="cursor-visual-container">
-            <div id="custom-cursor-circle"></div>
-            <div id="scroll-indicator"></div>
+          <div id="custom-cursor-circle"></div>
+          <div id="scroll-indicator"></div>
         </div>
       </div>
-      
+
       {/* The context menu is now separate and will not be affected by the blend mode */}
       {menu.visible && (
-          <div id="custom-context-menu" style={{ top: `${menu.y}px`, left: `${menu.x}px` }}>
-              <ul>
-                  {menu.items.map((item, index) => (
-                      <li key={index} onClick={item.action}>
-                          {item.label}
-                      </li>
-                  ))}
-              </ul>
-          </div>
+        <div id="custom-context-menu" style={{ top: `${menu.y}px`, left: `${menu.x}px` }}>
+          <ul>
+            {menu.items.map((item, index) => (
+              <li key={index} onClick={item.action}>
+                {item.label}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </>
   );

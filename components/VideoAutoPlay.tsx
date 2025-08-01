@@ -10,7 +10,15 @@ interface VideoAutoPlayProps {
   left?: string | number;
 }
 
-const VideoAutoPlay: React.FC<VideoAutoPlayProps> = ({ src, poster, className, width, height, top, left }) => {
+const VideoAutoPlay: React.FC<VideoAutoPlayProps> = ({
+  src,
+  poster,
+  className,
+  width,
+  height,
+  top,
+  left,
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isInView, setIsInView] = useState(false);
 
@@ -51,7 +59,7 @@ const VideoAutoPlay: React.FC<VideoAutoPlayProps> = ({ src, poster, className, w
     width: width !== undefined ? width : '100%',
     height: height !== undefined ? height : 'auto',
     display: 'block',
-    position: (top !== undefined || left !== undefined) ? 'absolute' : undefined,
+    position: top !== undefined || left !== undefined ? 'absolute' : undefined,
     top: top !== undefined ? top : undefined,
     left: left !== undefined ? left : undefined,
   };
@@ -73,4 +81,4 @@ const VideoAutoPlay: React.FC<VideoAutoPlayProps> = ({ src, poster, className, w
   );
 };
 
-export default VideoAutoPlay; 
+export default VideoAutoPlay;

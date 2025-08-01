@@ -1,7 +1,7 @@
 {
   "name": "maddevs-server",
   "version": "1.0.0",
-  "description": "Express server for MadDevs API",
+  "description": "Express server for maddevs API",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

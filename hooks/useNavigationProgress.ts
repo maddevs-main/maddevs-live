@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import { useEffect } from 'react';
 import { useProgressBar } from '../components/ProgressBarContext';
 
@@ -13,7 +13,7 @@ export function useNavigationProgress() {
       if (window.location.pathname !== currentPath) {
         start();
         currentPath = window.location.pathname;
-        
+
         // Finish after a short delay to simulate loading
         timeoutId = setTimeout(() => {
           finish();
@@ -28,7 +28,7 @@ export function useNavigationProgress() {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const link = target.closest('a');
-      
+
       if (link && link.href && !link.href.includes('#') && !link.target) {
         const url = new URL(link.href);
         if (url.origin === window.location.origin) {
@@ -41,13 +41,13 @@ export function useNavigationProgress() {
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
 
-    history.pushState = function(...args) {
+    history.pushState = function (...args) {
       originalPushState.apply(history, args);
       start();
       timeoutId = setTimeout(finish, 800);
     };
 
-    history.replaceState = function(...args) {
+    history.replaceState = function (...args) {
       originalReplaceState.apply(history, args);
       start();
       timeoutId = setTimeout(finish, 800);
@@ -63,4 +63,4 @@ export function useNavigationProgress() {
       history.replaceState = originalReplaceState;
     };
   }, [start, finish]);
-} 
+}

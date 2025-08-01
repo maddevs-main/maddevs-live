@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import gsap from 'gsap';
@@ -10,11 +10,11 @@ const Container = styled.div`
   position: relative;
   width: 100vw;
   max-width: 100vw;
-  height: 70vh;
+  height: 80vh; // Match Screen height
   min-height: 400px;
   overflow: visible;
-  background: transparent;
-  z-index: 1;
+  background: #b6b09f;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,7 +23,7 @@ const Container = styled.div`
 const Screen = styled.div`
   position: relative;
   width: 100vw;
-  height: 60vh;
+  height: 70vh; // Match Container height
   display: flex;
   align-items: center;
   justify-content: center;
@@ -33,7 +33,7 @@ const Screen = styled.div`
 const Wrapper3D = styled.div`
   position: relative;
   width: 100vw;
-  height: 63vh;
+  height: 100%; // Inherit from Screen
   perspective: 20vw;
   transform-style: preserve-3d;
 `;
@@ -56,6 +56,7 @@ const FoldTop = styled(Fold)`
 
 const FoldCenter = styled(Fold)`
   width: 100vw;
+  height: 100%; // Inherit from Wrapper3D
   position: relative;
 `;
 
@@ -71,24 +72,41 @@ const FoldBottom = styled(Fold)`
 const FoldAlign = styled.div`
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center; // vertically center
+  justify-content: center; // horizontally center
 `;
 
 const FoldContent = styled.div`
   width: 100%;
-  height: 100%;
+  height: auto; // let content define height
   will-change: transform;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 `;
 
 const Marquee = styled.div`
-  border-bottom: 4px solid #1a1a1a;
+  border-bottom: 4px solid #3c3316;
+  border-top: 4px solid #3c3316;
 
-  color: #ccc;
-  font-size: clamp(4.50rem, 3.64rem + 4.29vw, 9.00rem);
+  color: #f2f2f2;
+  font-size: clamp(1.5rem, 2.64rem + 4.29vw, 9rem);
   font-weight: 700;
-  height: calc(170px + 4rem);
+  height: calc(170px + 3rem);
   overflow: hidden;
   position: relative;
   width: 100vw;
+  @media (max-width: 768px) {
+    height: calc(90px + 3rem);
+  }
+  @media (max-width: 640px) {
+    height: calc(90px + 3rem);
+  }
+  @media (max-width: 450px) {
+    height: calc(90px + 3rem);
+  }
   background: transparent;
 `;
 
@@ -102,15 +120,15 @@ const Track = styled.div`
 `;
 
 const Focus = styled.span`
-  color: #1a1a1a;
+  color: #222222;
   font-weight: 900;
 `;
 
 const marqueeLines = [
-  'Creators.Creators.',
-  'Thinkers.Thinkers.',
-  'Innovators.Innovators.',
-  'Rebels.Rebels.Rebels.'
+  'Desire.Desire.Desire.Desire.Desire.',
+  'Deduct.',
+  'Design.Design.Design.Design.Design.Design.',
+  'Do It.Do It.',
 ];
 
 export default function TextScroll() {
@@ -123,17 +141,21 @@ export default function TextScroll() {
     // Horizontal marquee animation
     gsap.utils.toArray<HTMLElement>('.marquee', containerRef.current!).forEach((el, index) => {
       const w = el.querySelector('.track');
-      const [x, xEnd] = (index % 2 === 0) ? [-500, -1500] : [-500, 0];
+      const [x, xEnd] = index % 2 === 0 ? [-500, -1500] : [-500, 0];
       if (w) {
-        gsap.fromTo(w, { x }, {
-          x: xEnd,
-          scrollTrigger: {
-            scrub: 1,
-            trigger: containerRef.current,
-            start: 'top bottom',
-            end: 'bottom top',
-          },
-        });
+        gsap.fromTo(
+          w,
+          { x },
+          {
+            x: xEnd,
+            scrollTrigger: {
+              scrub: 1,
+              trigger: containerRef.current,
+              start: 'top bottom',
+              end: 'bottom top',
+            },
+          }
+        );
       }
     });
 
@@ -183,8 +205,11 @@ export default function TextScroll() {
   const renderMarquees = () => (
     <>
       {marqueeLines.map((line, i) => (
-        <Marquee className="marquee" key={i}>
+        <Marquee className="marquee lowercase" key={i}>
           <Track className="track">
+            {line}
+            <Focus className="-focus">{line.split('.')[0]}.</Focus>
+            {line.repeat(5)}
             {line}
             <Focus className="-focus">{line.split('.')[0]}.</Focus>
             {line.repeat(5)}
@@ -198,7 +223,6 @@ export default function TextScroll() {
     <Container ref={containerRef}>
       <Screen>
         <Wrapper3D>
-         
           <FoldCenter ref={centerFoldRef}>
             <FoldAlign>
               <FoldContent id="center-content" ref={centerContentRef}>
@@ -206,7 +230,6 @@ export default function TextScroll() {
               </FoldContent>
             </FoldAlign>
           </FoldCenter>
-       
         </Wrapper3D>
       </Screen>
     </Container>

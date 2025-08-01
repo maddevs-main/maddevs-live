@@ -53,7 +53,7 @@ export default function SupportOverlay() {
 
   return (
     <div className="relative w-full flex justify-end">
-      <div className="bg-black/90 backdrop-blur-md rounded-md shadow-xl w-[90vw] max-w-xs sm:max-w-sm transition-all duration-300 ease-in-out">
+      <div className="bg-black/80 rounded-xl sm:rounded-2xl backdrop-blur-md rounded-md shadow-xl w-[90vw] max-w-xs sm:max-w-sm transition-all duration-300 ease-in-out">
         {/* Toggle Header */}
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -65,7 +65,9 @@ export default function SupportOverlay() {
               alt="Support Icon"
               className="w-7 h-7 sm:w-8 sm:h-8 opacity-70 mr-3"
             />
-            <span className="text-base sm:text-lg font-semibold">Need Help?</span>
+            <span className="text-base sm:text-lg font-semibold">
+              Looking for Support/Help Desk?
+            </span>
           </div>
           <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
             <ChevronDown className="w-5 h-5" />
@@ -79,8 +81,13 @@ export default function SupportOverlay() {
           style={{ display: 'none', height: 0 }}
         >
           <p ref={textRef}>
-            We handle support via individual private channels created during onboarding. If you need help,
-            just drop us a mail at <span className="font-bold">mail@maddevs.in</span> and we’ll respond ASAP.
+            We handle support via individual private channels created during onboarding. We maintain
+            constant contact through those channels to ensure constant support to all our customers.{' '}
+            <br></br>
+            <span className="italic">
+              If you still need help, just drop us a mail at{' '}
+              <span className="font-bold">mail@maddevs.in</span>{' '}
+            </span>
           </p>
         </div>
       </div>

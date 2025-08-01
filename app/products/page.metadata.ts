@@ -1,17 +1,19 @@
 export const generateMetadata = async () => ({
-  title: 'PRODUCTS PAGE TITLE HERE', // TODO: Fill in unique title
-  description: 'PRODUCTS PAGE DESCRIPTION HERE', // TODO: Fill in unique description
+  title: 'products/maddevs - creative web design & development',
+  description:
+    'Explore the digital products and modular systems crafted by maddevs—fully integrated web applications, e-commerce platforms, landing pages, RBAC user systems, authentication workflows, and embedded payment modules. We build scalable, design-forward tools engineered for flexibility, performance, and future-ready integrations.',
   openGraph: {
-    title: 'PRODUCTS PAGE TITLE HERE',
-    description: 'PRODUCTS PAGE DESCRIPTION HERE',
+    title: 'products/maddevs - creative web design & development',
+    description:
+      'Discover maddevs’ suite of custom-built web products—from standalone applications and e-commerce frameworks to user authentication modules, payment systems, and role-based access controls. Designed with purpose. Built for performance.',
     url: 'https://maddevs.in/products',
-    siteName: 'MadDevs',
+    siteName: 'maddevs',
     images: [
       {
-        url: 'https://maddevs.in/assets/media/products.mp4', // TODO: Use a relevant image for this page
+        url: 'https://maddevs.in/assets/media/web_design_two.jpg', // Changed from .mp4 to .png for metadata compliance
         width: 1200,
         height: 630,
-        alt: 'Products, SaaS, AI-powered solutions, digital products',
+        alt: 'maddevs web products – authentication, e-commerce, dashboards, integrations',
       },
     ],
     locale: 'en_US',
@@ -19,12 +21,13 @@ export const generateMetadata = async () => ({
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PRODUCTS PAGE TITLE HERE',
-    description: 'PRODUCTS PAGE DESCRIPTION HERE',
+    title: 'products/maddevs - creative web design & development',
+    description:
+      'maddevs builds modular digital products—web apps, e-commerce systems, landing pages, blog platforms, auth systems, and custom dashboards—all designed for seamless integration and user-first experience.',
     site: '@maddevs_in',
     creator: '@maddevs_in',
-    images: ['https://maddevs.in/assets/media/products.mp4'],
+    images: ['https://maddevs.in/assets/media/web_development_design_products.png'],
   },
 });
- 
-export default generateMetadata; 
+
+export default generateMetadata;

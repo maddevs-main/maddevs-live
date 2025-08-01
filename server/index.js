@@ -11,66 +11,92 @@ const app = express();
 const config = require('./config');
 const PORT = config.port;
 
-const { sendOnboardCongratsMail, sendMeetingRequestMail, sendOnboardConfirmedMail, sendOnboardRejectedMail, sendOnboardDoneMail, sendMeetingStatusMail } = require('./mailService');
+const {
+  sendOnboardCongratsMail,
+  sendMeetingRequestMail,
+  sendOnboardConfirmedMail,
+  sendOnboardRejectedMail,
+  sendOnboardDoneMail,
+  sendMeetingStatusMail,
+} = require('./mailService');
 const checkApiKey = require('./middleware/checkApiKey');
 
-// Session management
+// Session management with proper cleanup and validation
 const sessions = new Map();
 
 // Share sessions with middleware
 setSessions(sessions);
 
-// Clean up expired sessions every hour
-setInterval(() => {
-  const now = Date.now();
-  for (const [token, session] of sessions.entries()) {
-    if (session.expiresAt < now) {
-      sessions.delete(token);
+// Enhanced session cleanup with better error handling
+const cleanupExpiredSessions = () => {
+  try {
+    const now = Date.now();
+    let cleanedCount = 0;
+
+    for (const [token, session] of sessions.entries()) {
+      if (session && session.expiresAt && session.expiresAt < now) {
+        sessions.delete(token);
+        cleanedCount++;
+      }
     }
+
+    if (cleanedCount > 0) {
+      console.log(`Cleaned up ${cleanedCount} expired sessions`);
+    }
+  } catch (error) {
+    console.error('Session cleanup error:', error);
   }
-}, 60 * 60 * 1000); // 1 hour
+};
+
+// Clean up expired sessions every 30 minutes (more frequent for better management)
+setInterval(cleanupExpiredSessions, 30 * 60 * 1000);
+
+// Initial cleanup
+cleanupExpiredSessions();
 
 // Middleware
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Allow localhost for development
-    if (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
-      return callback(null, true);
-    }
-    
-    // Allow your production domain (replace with actual domain)
-    const allowedOrigins = [
-      'https://maddevs.in', // TODO: Replace with actual frontend domain
-      'https://maddevs.in',
-      'https://www.maddevs.in'
-    ];
-    
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    
-    // For development, allow all origins
-    if (process.env.NODE_ENV === 'development') {
-      return callback(null, true);
-    }
-    
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      // Allow localhost for development
+      if (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
+        return callback(null, true);
+      }
+
+      // Allow your production domain (replace with actual domain)
+      const allowedOrigins = [
+        'https://maddevs.in', // TODO: Replace with actual frontend domain
+        'https://maddevs.in',
+        'https://www.maddevs.in',
+      ];
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // For development, allow all origins
+      if (process.env.NODE_ENV === 'development') {
+        return callback(null, true);
+      }
+
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  })
+);
 
 // Global error handler for CORS
 app.use((err, req, res, next) => {
   if (err.message === 'Not allowed by CORS') {
-    return res.status(403).json({ 
-      error: 'CORS Error', 
+    return res.status(403).json({
+      error: 'CORS Error',
       message: 'Origin not allowed',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
   next(err);
@@ -93,51 +119,60 @@ db.once('open', () => {
 
 // Mongoose schema
 // #manage-onboard-done
-const onboardSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  organisation: String,
-  title: String,
-  message: String,
-  date: String,
-  time: String,
-  meetingId: String,
-  meeting_link: { type: String, default: '' }, // NEW FIELD
-  approved: { type: Boolean, default: null },
-  done: { type: Boolean, default: null }, // #manage-onboard-done
-}, { timestamps: true });
+const onboardSchema = new mongoose.Schema(
+  {
+    name: String,
+    email: String,
+    organisation: String,
+    title: String,
+    message: String,
+    date: String,
+    time: String,
+    meetingId: String,
+    meeting_link: { type: String, default: '' }, // NEW FIELD
+    approved: { type: Boolean, default: null },
+    done: { type: Boolean, default: null }, // #manage-onboard-done
+  },
+  { timestamps: true }
+);
 // #manage-onboard-done
 
 const Onboard = mongoose.model('Onboard', onboardSchema);
 
 // Blog schema
-const blogSchema = new mongoose.Schema({
-  id: Number,
-  title: String,
-  slug: { type: String, unique: true }, // #slug-migration
-  excerpt: String,
-  author: String,
-  date: String,
-  content: String,
-  imageUrl: String,
-  detailImageUrl2: String,
-  isPinned: Boolean,
-  tags: [String], // Added tags field
-}, { timestamps: true });
+const blogSchema = new mongoose.Schema(
+  {
+    id: Number,
+    title: String,
+    slug: { type: String, unique: true }, // #slug-migration
+    excerpt: String,
+    author: String,
+    date: String,
+    content: String,
+    imageUrl: String,
+    detailImageUrl2: String,
+    isPinned: Boolean,
+    tags: [String], // Added tags field
+  },
+  { timestamps: true }
+);
 
 const Blog = mongoose.model('Blog', blogSchema);
 
 // News schema
-const newsSchema = new mongoose.Schema({
-  id: Number,
-  title: String,
-  slug: { type: String, unique: true }, // #slug-migration
-  subtitle: String,
-  imageUrl: String,
-  content: String,
-  layout: String,
-  tags: [String],
-}, { timestamps: true });
+const newsSchema = new mongoose.Schema(
+  {
+    id: Number,
+    title: String,
+    slug: { type: String, unique: true }, // #slug-migration
+    subtitle: String,
+    imageUrl: String,
+    content: String,
+    layout: String,
+    tags: [String],
+  },
+  { timestamps: true }
+);
 
 const News = mongoose.model('News', newsSchema);
 
@@ -146,9 +181,9 @@ app.post('/api/onboard', async (req, res) => {
   try {
     // Validate request body
     if (!req.body || typeof req.body !== 'object') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid request body',
-        message: 'Request body must be a valid JSON object'
+        message: 'Request body must be a valid JSON object',
       });
     }
 
@@ -175,10 +210,10 @@ app.post('/api/onboard', async (req, res) => {
     if (!meetingId || meetingId.trim() === '') missingFields.push('meetingId');
 
     if (missingFields.length > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Missing required fields',
         message: `The following fields are required: ${missingFields.join(', ')}`,
-        missingFields
+        missingFields,
       });
     }
 
@@ -187,7 +222,7 @@ app.post('/api/onboard', async (req, res) => {
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         error: 'Invalid email format',
-        message: 'Please provide a valid email address'
+        message: 'Please provide a valid email address',
       });
     }
 
@@ -198,61 +233,86 @@ app.post('/api/onboard', async (req, res) => {
     if (selectedDate < today) {
       return res.status(400).json({
         error: 'Invalid date',
-        message: 'Meeting date cannot be in the past'
+        message: 'Meeting date cannot be in the past',
       });
     }
 
-    const onboardEntry = new Onboard({ 
-      name, email, organisation, title, message, date, time, meetingId, approved, meeting_link 
+    const onboardEntry = new Onboard({
+      name,
+      email,
+      organisation,
+      title,
+      message,
+      date,
+      time,
+      meetingId,
+      approved,
+      meeting_link,
     });
-    
+
     await onboardEntry.save();
-    
+
     // Send emails (don't fail the request if emails fail)
     try {
-      await sendOnboardCongratsMail(email, name, { 
-        name, email, organisation, title, message, date, time, meetingId, meeting_link 
+      await sendOnboardCongratsMail(email, name, {
+        name,
+        email,
+        organisation,
+        title,
+        message,
+        date,
+        time,
+        meetingId,
+        meeting_link,
       });
     } catch (emailErr) {
       console.error('Failed to send confirmation email:', emailErr);
     }
-    
+
     try {
-      await sendMeetingRequestMail({ 
-        name, email, organisation, title, message, date, time, meetingId, meeting_link 
+      await sendMeetingRequestMail({
+        name,
+        email,
+        organisation,
+        title,
+        message,
+        date,
+        time,
+        meetingId,
+        meeting_link,
       });
     } catch (emailErr) {
       console.error('Failed to send notification email:', emailErr);
     }
-    
-    res.status(201).json({ 
-      success: true, 
+
+    res.status(201).json({
+      success: true,
       id: onboardEntry._id,
-      message: 'Meeting request submitted successfully'
+      message: 'Meeting request submitted successfully',
     });
   } catch (err) {
     console.error('Onboard submission error:', err);
-    
+
     // Handle specific database errors
     if (err.code === 11000) {
       return res.status(409).json({
         error: 'Duplicate meeting request',
-        message: 'A meeting request with this information already exists'
+        message: 'A meeting request with this information already exists',
       });
     }
-    
+
     if (err.name === 'ValidationError') {
       return res.status(400).json({
         error: 'Validation error',
         message: 'Invalid data provided',
-        details: Object.values(err.errors).map(e => e.message)
+        details: Object.values(err.errors).map(e => e.message),
       });
     }
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       error: 'Failed to submit meeting request',
       message: 'An error occurred while processing your request. Please try again later.',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -264,7 +324,7 @@ app.get('/api/onboard/all', checkJwtAuth, async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
-    
+
     // Add filtering support
     const filter = {};
     if (req.query.approved !== undefined) {
@@ -273,29 +333,26 @@ app.get('/api/onboard/all', checkJwtAuth, async (req, res) => {
     if (req.query.done !== undefined) {
       filter.done = req.query.done === 'true';
     }
-    
-    const meetings = await Onboard.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    
+
+    const meetings = await Onboard.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
+
     const total = await Onboard.countDocuments(filter);
-    
-    res.json({ 
+
+    res.json({
       meetings,
       pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
     console.error('Fetch onboard meetings error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch meetings',
       message: 'An error occurred while retrieving meeting data',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -306,30 +363,31 @@ app.patch('/api/onboard/:id/approve', checkJwtAuth, async (req, res) => {
   try {
     // Validate request body
     if (!req.body || typeof req.body !== 'object') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid request body',
-        message: 'Request body must be a valid JSON object'
+        message: 'Request body must be a valid JSON object',
       });
     }
 
     const { approved, meeting_link } = req.body;
-    
+
     // Validate approved field
     if (typeof approved !== 'boolean') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid approved value',
-        message: 'approved field must be a boolean (true or false)'
+        message: 'approved field must be a boolean (true or false)',
       });
     }
 
     // Validate meeting_link if provided
-    const sanitizedMeetingLink = typeof meeting_link === 'string' ? sanitizeHtml(meeting_link) : undefined;
-    
+    const sanitizedMeetingLink =
+      typeof meeting_link === 'string' ? sanitizeHtml(meeting_link) : undefined;
+
     // Validate ID format
     if (!req.params.id || req.params.id.length !== 24) {
       return res.status(400).json({
         error: 'Invalid ID format',
-        message: 'Meeting ID must be a valid 24-character string'
+        message: 'Meeting ID must be a valid 24-character string',
       });
     }
 
@@ -339,15 +397,15 @@ app.patch('/api/onboard/:id/approve', checkJwtAuth, async (req, res) => {
     }
 
     const updated = await Onboard.findByIdAndUpdate(
-      req.params.id, 
-      { $set: updateFields }, 
+      req.params.id,
+      { $set: updateFields },
       { new: true, runValidators: true }
     );
-    
+
     if (!updated) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Meeting not found',
-        message: 'No meeting found with the provided ID'
+        message: 'No meeting found with the provided ID',
       });
     }
 
@@ -365,33 +423,33 @@ app.patch('/api/onboard/:id/approve', checkJwtAuth, async (req, res) => {
       // Don't fail the request, just log the error
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       onboard: updated,
-      message: `Meeting ${approved ? 'approved' : 'rejected'} successfully`
+      message: `Meeting ${approved ? 'approved' : 'rejected'} successfully`,
     });
   } catch (err) {
     console.error('Approve/reject onboard error:', err);
-    
+
     if (err.name === 'CastError') {
       return res.status(400).json({
         error: 'Invalid ID format',
-        message: 'The provided meeting ID is not valid'
+        message: 'The provided meeting ID is not valid',
       });
     }
-    
+
     if (err.name === 'ValidationError') {
       return res.status(400).json({
         error: 'Validation error',
         message: 'Invalid data provided',
-        details: Object.values(err.errors).map(e => e.message)
+        details: Object.values(err.errors).map(e => e.message),
       });
     }
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       error: 'Failed to update meeting status',
       message: 'An error occurred while updating the meeting status',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -403,19 +461,19 @@ app.patch('/api/onboard/:id/done', checkJwtAuth, async (req, res) => {
   try {
     // Validate request body
     if (!req.body || typeof req.body !== 'object') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid request body',
-        message: 'Request body must be a valid JSON object'
+        message: 'Request body must be a valid JSON object',
       });
     }
 
     const { done } = req.body;
-    
+
     // Validate done field
     if (typeof done !== 'boolean') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid done value',
-        message: 'done field must be a boolean (true or false)'
+        message: 'done field must be a boolean (true or false)',
       });
     }
 
@@ -423,20 +481,20 @@ app.patch('/api/onboard/:id/done', checkJwtAuth, async (req, res) => {
     if (!req.params.id || req.params.id.length !== 24) {
       return res.status(400).json({
         error: 'Invalid ID format',
-        message: 'Meeting ID must be a valid 24-character string'
+        message: 'Meeting ID must be a valid 24-character string',
       });
     }
 
     const updated = await Onboard.findByIdAndUpdate(
-      req.params.id, 
-      { $set: { done } }, 
+      req.params.id,
+      { $set: { done } },
       { new: true, runValidators: true }
     );
-    
+
     if (!updated) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Meeting not found',
-        message: 'No meeting found with the provided ID'
+        message: 'No meeting found with the provided ID',
       });
     }
 
@@ -449,33 +507,33 @@ app.patch('/api/onboard/:id/done', checkJwtAuth, async (req, res) => {
       // Don't fail the request, just log the error
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       onboard: updated,
-      message: `Meeting marked as ${done ? 'completed' : 'incomplete'} successfully`
+      message: `Meeting marked as ${done ? 'completed' : 'incomplete'} successfully`,
     });
   } catch (err) {
     console.error('Mark done onboard error:', err);
-    
+
     if (err.name === 'CastError') {
       return res.status(400).json({
         error: 'Invalid ID format',
-        message: 'The provided meeting ID is not valid'
+        message: 'The provided meeting ID is not valid',
       });
     }
-    
+
     if (err.name === 'ValidationError') {
       return res.status(400).json({
         error: 'Validation error',
         message: 'Invalid data provided',
-        details: Object.values(err.errors).map(e => e.message)
+        details: Object.values(err.errors).map(e => e.message),
       });
     }
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       error: 'Failed to update meeting status',
       message: 'An error occurred while updating the meeting completion status',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -488,7 +546,7 @@ app.get('/api/blogs', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
-    
+
     // Add filtering support
     const filter = {};
     if (req.query.isPinned !== undefined) {
@@ -498,29 +556,26 @@ app.get('/api/blogs', async (req, res) => {
       const tags = Array.isArray(req.query.tags) ? req.query.tags : [req.query.tags];
       filter.tags = { $in: tags };
     }
-    
-    const blogs = await Blog.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    
+
+    const blogs = await Blog.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
+
     const total = await Blog.countDocuments(filter);
-    
-    res.json({ 
+
+    res.json({
       blogs,
       pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
     console.error('Fetch blogs error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch blogs',
       message: 'An error occurred while retrieving blog data',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -529,16 +584,18 @@ app.get('/api/blogs', async (req, res) => {
 if (process.env.NODE_ENV !== 'production') {
   app.post('/api/blogs/seed', checkJwtAuth, async (req, res) => {
     try {
-      const blogs = Array.isArray(req.body.blogs) ? req.body.blogs.map(blog => ({
-        ...blog,
-        title: sanitizeHtml(blog.title),
-        excerpt: sanitizeHtml(blog.excerpt),
-        author: sanitizeHtml(blog.author),
-        content: sanitizeHtml(blog.content),
-        imageUrl: sanitizeHtml(blog.imageUrl),
-        detailImageUrl2: sanitizeHtml(blog.detailImageUrl2),
-        tags: Array.isArray(blog.tags) ? blog.tags.map(tag => sanitizeHtml(tag)) : [],
-      })) : [];
+      const blogs = Array.isArray(req.body.blogs)
+        ? req.body.blogs.map(blog => ({
+          ...blog,
+          title: sanitizeHtml(blog.title),
+          excerpt: sanitizeHtml(blog.excerpt),
+          author: sanitizeHtml(blog.author),
+          content: sanitizeHtml(blog.content),
+          imageUrl: sanitizeHtml(blog.imageUrl),
+          detailImageUrl2: sanitizeHtml(blog.detailImageUrl2),
+          tags: Array.isArray(blog.tags) ? blog.tags.map(tag => sanitizeHtml(tag)) : [],
+        }))
+        : [];
       if (!Array.isArray(blogs)) return res.status(400).json({ error: 'Invalid blogs array' });
       await Blog.deleteMany({});
       await Blog.insertMany(blogs);
@@ -556,7 +613,7 @@ app.get('/api/news', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
-    
+
     // Add filtering support
     const filter = {};
     if (req.query.layout) {
@@ -566,29 +623,26 @@ app.get('/api/news', async (req, res) => {
       const tags = Array.isArray(req.query.tags) ? req.query.tags : [req.query.tags];
       filter.tags = { $in: tags };
     }
-    
-    const news = await News.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    
+
+    const news = await News.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
+
     const total = await News.countDocuments(filter);
-    
-    res.json({ 
+
+    res.json({
       news,
       pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
     console.error('Fetch news error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch news',
       message: 'An error occurred while retrieving news data',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -597,15 +651,17 @@ app.get('/api/news', async (req, res) => {
 if (process.env.NODE_ENV !== 'production') {
   app.post('/api/news/seed', checkJwtAuth, async (req, res) => {
     try {
-      const news = Array.isArray(req.body.news) ? req.body.news.map(item => ({
-        ...item,
-        title: sanitizeHtml(item.title),
-        subtitle: sanitizeHtml(item.subtitle),
-        content: sanitizeHtml(item.content),
-        imageUrl: sanitizeHtml(item.imageUrl),
-        layout: sanitizeHtml(item.layout),
-        tags: Array.isArray(item.tags) ? item.tags.map(tag => sanitizeHtml(tag)) : [],
-      })) : [];
+      const news = Array.isArray(req.body.news)
+        ? req.body.news.map(item => ({
+          ...item,
+          title: sanitizeHtml(item.title),
+          subtitle: sanitizeHtml(item.subtitle),
+          content: sanitizeHtml(item.content),
+          imageUrl: sanitizeHtml(item.imageUrl),
+          layout: sanitizeHtml(item.layout),
+          tags: Array.isArray(item.tags) ? item.tags.map(tag => sanitizeHtml(tag)) : [],
+        }))
+        : [];
       if (!Array.isArray(news)) return res.status(400).json({ error: 'Invalid news array' });
       await News.deleteMany({});
       await News.insertMany(news);
@@ -621,29 +677,29 @@ if (process.env.NODE_ENV !== 'production') {
 app.get('/api/blogs/:id', async (req, res) => {
   try {
     const blogId = parseInt(req.params.id);
-    
+
     if (isNaN(blogId)) {
       return res.status(400).json({
         error: 'Invalid blog ID',
-        message: 'Blog ID must be a valid number'
+        message: 'Blog ID must be a valid number',
       });
     }
-    
+
     const blog = await Blog.findOne({ id: blogId });
     if (!blog) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Blog not found',
-        message: 'No blog found with the provided ID'
+        message: 'No blog found with the provided ID',
       });
     }
-    
+
     res.json(blog);
   } catch (err) {
     console.error('Fetch single blog error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch blog',
       message: 'An error occurred while retrieving the blog',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -653,29 +709,29 @@ app.get('/api/blogs/:id', async (req, res) => {
 app.get('/api/blogs/slug/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    
+
     if (!slug || slug.trim() === '') {
       return res.status(400).json({
         error: 'Invalid slug',
-        message: 'Blog slug is required'
+        message: 'Blog slug is required',
       });
     }
-    
+
     const blog = await Blog.findOne({ slug: slug.trim() });
     if (!blog) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Blog not found',
-        message: 'No blog found with the provided slug'
+        message: 'No blog found with the provided slug',
       });
     }
-    
+
     res.json(blog);
   } catch (err) {
     console.error('Fetch blog by slug error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch blog',
       message: 'An error occurred while retrieving the blog',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -685,7 +741,19 @@ app.get('/api/blogs/slug/:slug', async (req, res) => {
 // CREATE a new blog (with slug)
 app.post('/api/blogs', checkJwtAuth, async (req, res) => {
   try {
-    let { id, title, slug, excerpt, author, date, content, imageUrl, detailImageUrl2, isPinned, tags } = req.body;
+    let {
+      id,
+      title,
+      slug,
+      excerpt,
+      author,
+      date,
+      content,
+      imageUrl,
+      detailImageUrl2,
+      isPinned,
+      tags,
+    } = req.body;
     title = sanitizeHtml(title);
     slug = slug ? sanitizeHtml(slug) : undefined;
     excerpt = sanitizeHtml(excerpt);
@@ -704,7 +772,19 @@ app.post('/api/blogs', checkJwtAuth, async (req, res) => {
       newId = lastBlog ? lastBlog.id + 1 : 1;
     }
     if (!slug) slug = slugify(title);
-    const blog = new Blog({ id: newId, title, slug, excerpt, author, date, content, imageUrl, detailImageUrl2, isPinned, tags });
+    const blog = new Blog({
+      id: newId,
+      title,
+      slug,
+      excerpt,
+      author,
+      date,
+      content,
+      imageUrl,
+      detailImageUrl2,
+      isPinned,
+      tags,
+    });
     await blog.save();
     res.status(201).json({ success: true, blog });
   } catch (err) {
@@ -717,7 +797,8 @@ app.post('/api/blogs', checkJwtAuth, async (req, res) => {
 // UPDATE a blog by id (with slug)
 app.put('/api/blogs/:id', checkJwtAuth, async (req, res) => {
   try {
-    let { title, slug, excerpt, author, date, content, imageUrl, detailImageUrl2, isPinned, tags } = req.body;
+    let { title, slug, excerpt, author, date, content, imageUrl, detailImageUrl2, isPinned, tags } =
+      req.body;
     title = sanitizeHtml(title);
     slug = slug ? sanitizeHtml(slug) : undefined;
     excerpt = sanitizeHtml(excerpt);
@@ -730,7 +811,20 @@ app.put('/api/blogs/:id', checkJwtAuth, async (req, res) => {
     if (!slug && title) slug = slugify(title);
     const updated = await Blog.findOneAndUpdate(
       { id: req.params.id },
-      { $set: { title, slug, excerpt, author, date, content, imageUrl, detailImageUrl2, isPinned, tags } },
+      {
+        $set: {
+          title,
+          slug,
+          excerpt,
+          author,
+          date,
+          content,
+          imageUrl,
+          detailImageUrl2,
+          isPinned,
+          tags,
+        },
+      },
       { new: true }
     );
     if (!updated) return res.status(404).json({ error: 'Blog not found' });
@@ -758,29 +852,29 @@ app.delete('/api/blogs/:id', checkJwtAuth, async (req, res) => {
 app.get('/api/news/:id', async (req, res) => {
   try {
     const newsId = parseInt(req.params.id);
-    
+
     if (isNaN(newsId)) {
       return res.status(400).json({
         error: 'Invalid news ID',
-        message: 'News ID must be a valid number'
+        message: 'News ID must be a valid number',
       });
     }
-    
+
     const news = await News.findOne({ id: newsId });
     if (!news) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'News not found',
-        message: 'No news found with the provided ID'
+        message: 'No news found with the provided ID',
       });
     }
-    
+
     res.json(news);
   } catch (err) {
     console.error('Fetch single news error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch news',
       message: 'An error occurred while retrieving the news',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -790,29 +884,29 @@ app.get('/api/news/:id', async (req, res) => {
 app.get('/api/news/slug/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    
+
     if (!slug || slug.trim() === '') {
       return res.status(400).json({
         error: 'Invalid slug',
-        message: 'News slug is required'
+        message: 'News slug is required',
       });
     }
-    
+
     const news = await News.findOne({ slug: slug.trim() });
     if (!news) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'News not found',
-        message: 'No news found with the provided slug'
+        message: 'No news found with the provided slug',
       });
     }
-    
+
     res.json(news);
   } catch (err) {
     console.error('Fetch news by slug error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch news',
       message: 'An error occurred while retrieving the news',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -898,52 +992,121 @@ function slugify(str) {
 }
 // #slug-migration
 
-// Token validation endpoint
+// Token validation endpoint with enhanced session info
 app.post('/api/validate-token', checkJwtAuth, (req, res) => {
   try {
     // If we reach here, the token is valid (checkJwtAuth middleware passed)
-    res.json({ 
+    const session = req.session;
+    const timeLeft = session.expiresAt - Date.now();
+
+    res.json({
       valid: true,
       message: 'Token is valid',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      session: {
+        userId: session.userId,
+        username: session.username,
+        expiresAt: new Date(session.expiresAt).toISOString(),
+        lastActivity: new Date(session.lastActivity).toISOString(),
+        timeLeft: Math.max(0, timeLeft),
+        timeLeftDays: Math.ceil(timeLeft / (24 * 60 * 60 * 1000)),
+      }
     });
   } catch (err) {
     console.error('Token validation error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Token validation failed',
       message: 'An error occurred while validating the token',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
 
-// Login route
+// Session refresh endpoint
+app.post('/api/refresh-session', checkJwtAuth, (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader.split(' ')[1];
+    const session = sessions.get(token);
+
+    if (!session) {
+      return res.status(401).json({
+        error: 'Session not found',
+        message: 'Session has expired or is invalid',
+      });
+    }
+
+    // Extend session by 7 days
+    const newExpiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    session.expiresAt = newExpiresAt;
+    session.lastActivity = Date.now();
+
+    sessions.set(token, session);
+
+    res.json({
+      message: 'Session refreshed successfully',
+      session: {
+        expiresAt: new Date(newExpiresAt).toISOString(),
+        lastActivity: new Date(session.lastActivity).toISOString(),
+      }
+    });
+  } catch (err) {
+    console.error('Session refresh error:', err);
+    res.status(500).json({
+      error: 'Session refresh failed',
+      message: 'An error occurred while refreshing the session',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    });
+  }
+});
+
+// Login route with enhanced session management
 app.post('/api/login', (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
-    if (username === 'admin' && password === 'maddevs2024') {
-      // Create session with 1 week expiration
+
+    if (username === 'christiangrey' && password === 'weACEinhouse@09') {
+      // Clean up any existing sessions for this user first
+      for (const [existingToken, session] of sessions.entries()) {
+        if (session && session.username === username) {
+          sessions.delete(existingToken);
+        }
+      }
+
+      // Create session with 7 days expiration
       const expiresIn = '7d';
       const token = jwt.sign({ admin: true }, JWT_SECRET, { expiresIn });
-      
-      // Store session
-      const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
-      sessions.set(token, {
+      const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+
+      // Store session with enhanced data
+      const sessionData = {
         userId: 'admin',
         username: username,
         expiresAt: expiresAt,
-        createdAt: Date.now()
-      });
-      
-      return res.json({ 
+        createdAt: Date.now(),
+        lastActivity: Date.now(),
+        userAgent: req.headers['user-agent'] || 'unknown',
+        ipAddress: req.ip || req.connection.remoteAddress || 'unknown'
+      };
+
+      sessions.set(token, sessionData);
+
+      console.log(`New session created for user: ${username}, Token: ${token.substring(0, 20)}...`);
+
+      return res.json({
         token,
         expiresIn: '7d',
-        message: 'Login successful'
+        message: 'Login successful',
+        sessionInfo: {
+          expiresAt: new Date(expiresAt).toISOString(),
+          createdAt: new Date(sessionData.createdAt).toISOString()
+        }
       });
     }
+
     return res.status(401).json({ error: 'Invalid credentials' });
   } catch (err) {
     console.error('Login error:', err);
@@ -956,20 +1119,20 @@ app.post('/api/logout', checkJwtAuth, (req, res) => {
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader.split(' ')[1];
-    
+
     // Remove session
     sessions.delete(token);
-    
-    res.json({ 
+
+    res.json({
       message: 'Logout successful',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (err) {
     console.error('Logout error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Logout failed',
       message: 'An error occurred during logout',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
@@ -980,16 +1143,16 @@ app.get('/api/session/status', checkJwtAuth, (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader.split(' ')[1];
     const session = sessions.get(token);
-    
+
     if (!session) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         error: 'Session not found',
-        message: 'Session has expired or is invalid'
+        message: 'Session has expired or is invalid',
       });
     }
-    
+
     const timeLeft = session.expiresAt - Date.now();
-    
+
     res.json({
       valid: true,
       session: {
@@ -997,79 +1160,79 @@ app.get('/api/session/status', checkJwtAuth, (req, res) => {
         username: session.username,
         expiresAt: new Date(session.expiresAt).toISOString(),
         timeLeft: Math.max(0, timeLeft),
-        timeLeftDays: Math.ceil(timeLeft / (24 * 60 * 60 * 1000))
-      }
+        timeLeftDays: Math.ceil(timeLeft / (24 * 60 * 60 * 1000)),
+      },
     });
   } catch (err) {
     console.error('Session status error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Session status check failed',
       message: 'An error occurred while checking session status',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 });
 
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
-  res.status(404).json({ 
-    error: 'Route not found', 
+  res.status(404).json({
+    error: 'Route not found',
     message: `Cannot ${req.method} ${req.originalUrl}`,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Global error handling middleware
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
-  
+
   // Handle different types of errors
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       error: 'Validation Error',
       message: 'Invalid data provided',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
-  
+
   if (err.name === 'CastError') {
     return res.status(400).json({
       error: 'Invalid ID',
       message: 'The provided ID is not valid',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
-  
+
   if (err.code === 11000) {
     return res.status(409).json({
       error: 'Duplicate Error',
       message: 'A record with this information already exists',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
-  
+
   if (err.name === 'JsonWebTokenError') {
     return res.status(401).json({
       error: 'Invalid Token',
       message: 'The provided token is invalid',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
-  
+
   if (err.name === 'TokenExpiredError') {
     return res.status(401).json({
       error: 'Token Expired',
       message: 'The provided token has expired',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
-  
+
   // Default error response
   res.status(500).json({
     error: 'Internal Server Error',
     message: 'Something went wrong on the server',
     details: process.env.NODE_ENV === 'development' ? err.message : undefined,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -1090,7 +1253,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Uncaught exception handler
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   console.error('Uncaught Exception:', error);
   process.exit(1);
 });
@@ -1100,4 +1263,5 @@ app.listen(PORT, () => {
   console.log('Environment:', process.env.NODE_ENV || 'development');
   console.log('CORS enabled for development and production domains');
   console.log('Backend API secret key:', config.api.secretKey);
-}); 
+});
+

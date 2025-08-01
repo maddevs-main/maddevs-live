@@ -1,0 +1,19 @@
+# Build and system files
+node_modules
+.next
+dist
+build
+coverage
+out
+
+# Environment and config
+.env*
+*.log
+
+# Version control
+.git
+.DS_Store
+
+# Public/static files
+public
+assets

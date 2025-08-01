@@ -1,12 +1,12 @@
 // Centralized mail templates for all mail types
 // Each function returns a formatted HTML string for use in nodemailer
 
-const BASE_URL = 'https://yourdomain.com'; // TODO: Set to your real deployed domain
+const BASE_URL = 'https://maddevs.in'; // Updated to actual domain
 const LOGO_URL = BASE_URL + '/assets/media/logo.png';
 const MAIL_TOP_URL = BASE_URL + '/assets/media/mail-top.png';
 
 function meetingCredentialsTable(data, showMeetingLink = true) {
-  const safe = (v) => v ? String(v) : '-';
+  const safe = v => (v ? String(v) : '-');
   return `
     <table style="width:100%; border-collapse:collapse; font-family: sans-serif; font-size:15px; color:#222; margin-top:12px;">
       <tr style="background:#eee; color:#111; font-weight:bold;">
@@ -36,7 +36,7 @@ function footer() {
   `;
 }
 
-function mailTemplate({ subject, intro, meetingData, extraContent, showMeetingLink = true }) {
+function mailTemplate({ intro, meetingData, extraContent, showMeetingLink = true }) {
   return `
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F3EB; font-family:sans-serif; max-width:600px; margin:auto; border-radius:0; overflow:hidden;">
       <tr>
@@ -49,7 +49,6 @@ function mailTemplate({ subject, intro, meetingData, extraContent, showMeetingLi
           <table width="100%" cellpadding="0" cellspacing="0" style="border:none; background:transparent;">
             <tr>
               <td style="padding:32px 24px 16px 24px; vertical-align:top;">
-                <h2 style="margin:0 0 12px 0; color:#111; font-size:22px; font-weight:700; font-family:sans-serif;">${subject}</h2>
                 <p style="margin:0 0 18px 0; color:#222; font-size:16px;">${intro}</p>
                 ${meetingCredentialsTable(meetingData, showMeetingLink)}
                 ${extraContent ? `<div style='margin-top:18px;'>${extraContent}</div>` : ''}
@@ -68,58 +67,52 @@ function mailTemplate({ subject, intro, meetingData, extraContent, showMeetingLi
 
 function getOnboardCongratsMailHTML(data) {
   return mailTemplate({
-    subject: 'Welcome to MadDevs',
-    intro: `Dear ${data.name || 'User'},<br><br>We are pleased to confirm your onboarding. Please find your meeting details below.<br><br>We look forward to working with you.<br>Best regards,<br>MadDevs Team`,
+    intro: `Dear ${data.name || 'User'},<br><br>We are pleased to confirm your onboarding. Please find your meeting details below.<br><br>We look forward to working with you.<br>Best regards,<br>maddevs`,
     meetingData: data,
-    showMeetingLink: true
+    showMeetingLink: true,
   });
 }
 
 function getMeetingRequestMailHTML(data) {
   return mailTemplate({
-    subject: 'New Meeting Request Received',
     intro: `A new onboarding meeting request has been submitted. Please review the details below.<br><br>Please respond at your earliest convenience.`,
     meetingData: data,
-    showMeetingLink: false
+    showMeetingLink: false,
   });
 }
 
 function getOnboardConfirmedMailHTML(data, gcal, ical) {
   return mailTemplate({
-    subject: 'Meeting Confirmed',
-    intro: `Dear ${data.name || 'User'},<br><br>Your onboarding meeting is confirmed. Please find the details below and add the event to your calendar.<br><br>Looking forward to meeting you.<br>MadDevs Team`,
+    intro: `Dear ${data.name || 'User'},<br><br>Your onboarding meeting is confirmed. Please find the details below and add the event to your calendar.<br><br>Looking forward to meeting you.<br>maddevs`,
     meetingData: data,
     extraContent: `<span style='font-size:15px;'>Add to calendar:</span><br>
       <a href="${gcal}" style="color:#0a112f; text-decoration:underline;">Google Calendar</a> &nbsp;|&nbsp;
       <a href="${ical}" download="meeting.ics" style="color:#0a112f; text-decoration:underline;">Apple Calendar (ICS)</a>`,
-    showMeetingLink: true
+    showMeetingLink: true,
   });
 }
 
 function getOnboardRejectedMailHTML(data) {
   return mailTemplate({
-    subject: 'Meeting Request Rejected',
-    intro: `Dear ${data.name || 'User'},<br><br>We regret to inform you that your onboarding meeting request was not approved. Please contact us for further information.<br><br>Best regards,<br>MadDevs Team`,
+    intro: `Dear ${data.name || 'User'},<br><br>We regret to inform you that your onboarding meeting request was not approved. Please contact us for further information.<br><br>Best regards,<br>maddevs`,
     meetingData: data,
-    showMeetingLink: true
+    showMeetingLink: true,
   });
 }
 
 function getOnboardDoneMailHTML(data) {
   return mailTemplate({
-    subject: 'Meeting Completed',
-    intro: `Dear ${data.name || 'User'},<br><br>Your onboarding meeting has been marked as completed. Thank you for your participation.<br><br>Best regards,<br>MadDevs Team`,
+    intro: `Dear ${data.name || 'User'},<br><br>Your onboarding meeting has been marked as completed. Thank you for your participation.<br><br>Best regards,<br>maddevs`,
     meetingData: data,
-    showMeetingLink: true
+    showMeetingLink: true,
   });
 }
 
 function getMeetingStatusMailHTML(data, status) {
   return mailTemplate({
-    subject: `Meeting Status: ${status}`,
-    intro: `The following meeting has been updated to status: <b>${status}</b>.<br><br>Best regards,<br>MadDevs Team`,
+    intro: `The following meeting has been updated to status: <b>${status}</b>.<br><br>Best regards,<br>maddevs`,
     meetingData: data,
-    showMeetingLink: true
+    showMeetingLink: true,
   });
 }
 
@@ -130,4 +123,4 @@ module.exports = {
   getOnboardRejectedMailHTML,
   getOnboardDoneMailHTML,
   getMeetingStatusMailHTML,
-}; 
+};

@@ -1,5 +1,6 @@
-"use client";
+'use client';
 import React, { useEffect, useRef } from 'react';
+import Script from 'next/script';
 
 // For this to work, you would need to install these packages in your project:
 // npm install three
@@ -8,6 +9,134 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+
+// SEO Structured Data
+const productsData = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'products/maddevs – creative web design & development',
+  description:
+    'Modular tools by maddevs: from authentication systems and landing page kits to payment integrations and scalable e-commerce frameworks—designed for precision, performance, and expressive deployment.',
+  url: 'https://maddevs.in/products',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      item: {
+        '@type': 'Product',
+        name: 'Authentication Modules',
+        description: 'Secure, modular auth systems with modern protocols like OAuth2, JWT, and RBAC integration.',
+        brand: { '@type': 'Brand', name: 'maddevs' },
+        category: 'Software'
+      }
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      item: {
+        '@type': 'Product',
+        name: 'User Management Systems',
+        description: 'Custom user and role-based access systems (RBAC/ABAC) with dashboards and API-first architecture.',
+        brand: { '@type': 'Brand', name: 'maddevs' },
+        category: 'Software'
+      }
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      item: {
+        '@type': 'Product',
+        name: 'Landing Page Kits',
+        description: 'High-converting, customizable landing page frameworks built for performance and branding.',
+        brand: { '@type': 'Brand', name: 'maddevs' },
+        category: 'Software'
+      }
+    },
+    {
+      '@type': 'ListItem',
+      position: 4,
+      item: {
+        '@type': 'Product',
+        name: 'Payment Integrations',
+        description: 'Pre-built modules for Stripe, Razorpay, and other payment gateways with PCI compliance.',
+        brand: { '@type': 'Brand', name: 'maddevs' },
+        category: 'Software'
+      }
+    },
+    {
+      '@type': 'ListItem',
+      position: 5,
+      item: {
+        '@type': 'Product',
+        name: 'E-commerce Frameworks',
+        description: 'Scalable platforms with product management, inventory, checkout flows, and analytics.',
+        brand: { '@type': 'Brand', name: 'maddevs' },
+        category: 'Software'
+      }
+    },
+    {
+      '@type': 'ListItem',
+      position: 6,
+      item: {
+        '@type': 'Product',
+        name: 'Multi-vendor E-commerce Systems',
+        description: 'Frameworks for marketplace platforms with vendor onboarding, commissions, and order routing.',
+        brand: { '@type': 'Brand', name: 'maddevs' },
+        category: 'Software'
+      }
+    },
+    {
+      '@type': 'ListItem',
+      position: 7,
+      item: {
+        '@type': 'Product',
+        name: 'Subscription Management Modules',
+        description: 'Tools for managing recurring billing, trials, upgrades, cancellations, and metered usage.',
+        brand: { '@type': 'Brand', name: 'maddevs' },
+        category: 'Software'
+      }
+    },
+    {
+      '@type': 'ListItem',
+      position: 8,
+      item: {
+        '@type': 'Product',
+        name: 'Content & Blog Engines',
+        description: 'Flexible blog systems with headless CMS integration, publishing workflows, and SEO tooling.',
+        brand: { '@type': 'Brand', name: 'maddevs' },
+        category: 'Software'
+      }
+    },
+    {
+      '@type': 'ListItem',
+      position: 9,
+      item: {
+        '@type': 'Product',
+        name: 'User Dashboards',
+        description: 'Prebuilt UI kits for user-facing portals with notifications, profile settings, and activity logs.',
+        brand: { '@type': 'Brand', name: 'maddevs' },
+        category: 'Software'
+      }
+    },
+    {
+      '@type': 'ListItem',
+      position: 10,
+      item: {
+        '@type': 'Product',
+        name: 'Admin Panels & Back Offices',
+        description: 'Headless or full-stack admin consoles for managing platforms, users, content, and analytics.',
+        brand: { '@type': 'Brand', name: 'maddevs' },
+        category: 'Software'
+      }
+    }
+  ],
+  publisher: {
+    '@type': 'Organization',
+    name: 'maddevs',
+    url: 'https://maddevs.in',
+    description: 'Creative web design & development studio crafting expressive products and modular digital systems.'
+  }
+};
 
 // Metadata is now in page.metadata.ts (server-only)
 
@@ -24,60 +153,88 @@ export default function App() {
 
   // useEffect hook runs once after the component mounts
   useEffect(() => {
+    // Page load tracking
+    const startTime = performance.now();
+    console.log(
+      "Welcome to maddevs, this page was designed and created by maddevs, visit 'https://www.maddevs.in' for further information"
+    );
+
     let animationFrameId: number;
     let cleanupFunctions: (() => void)[] = [];
 
     // --- Preloader Logic with Text Fill Effect ---
     const progressFill = progressFillRef.current;
     if (progressFill) {
-        let progress = 0;
-        const duration = 2500; // Total loading time in ms
-        const intervalTime = 50; // Update interval
+      let progress = 0;
+      const duration = 2500; // Total loading time in ms
+      const intervalTime = 50; // Update interval
 
-        const intervalId = setInterval(() => {
-            progress += (intervalTime / duration) * 100;
-            progressFill.style.width = `${Math.min(progress, 100)}%`;
+      const intervalId = setInterval(() => {
+        progress += (intervalTime / duration) * 100;
+        progressFill.style.width = `${Math.min(progress, 100)}%`;
 
-            if (progress >= 100) {
-                clearInterval(intervalId);
-                // Fade out preloader and show main content
-                const mainElements = [canvasRef.current, particlesRef.current, titlesRef.current, footerRef.current, productsHeadingRef.current];
-                mainElements.forEach(el => { if(el) el.style.opacity = "1"; });
-                if(preloaderRef.current) {
-                    preloaderRef.current.style.opacity = "0";
-                    setTimeout(() => { if(preloaderRef.current) preloaderRef.current.style.display = "none"; }, 800);
-                }
-            }
-        }, intervalTime);
-        cleanupFunctions.push(() => clearInterval(intervalId));
+        if (progress >= 100) {
+          clearInterval(intervalId);
+          // Fade out preloader and show main content
+          const mainElements = [
+            canvasRef.current,
+            particlesRef.current,
+            titlesRef.current,
+            footerRef.current,
+            productsHeadingRef.current,
+          ];
+          mainElements.forEach(el => {
+            if (el) el.style.opacity = '1';
+          });
+          if (preloaderRef.current) {
+            preloaderRef.current.style.opacity = '0';
+            setTimeout(() => {
+              if (preloaderRef.current) preloaderRef.current.style.display = 'none';
+            }, 800);
+          }
+        }
+      }, intervalTime);
+      cleanupFunctions.push(() => clearInterval(intervalId));
     }
-
 
     const particlesContainer = particlesRef.current;
     if (particlesContainer) {
-        for (let i = 0; i < 80; i++) {
-            const particle = document.createElement("div");
-            particle.className = "particle";
-            const size = Math.random() * 5 + 2;
-            Object.assign(particle.style, {
-                width: `${size}px`, height: `${size}px`, left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`, opacity: (Math.random() * 0.5 + 0.1).toString()
-            });
-            particlesContainer.appendChild(particle);
-        }
+      for (let i = 0; i < 80; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        const size = Math.random() * 5 + 2;
+        Object.assign(particle.style, {
+          width: `${size}px`,
+          height: `${size}px`,
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          opacity: (Math.random() * 0.5 + 0.1).toString(),
+        });
+        particlesContainer.appendChild(particle);
+      }
     }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      preserveDrawingBuffer: true,
+      alpha: true,
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
-    
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+
+    const camera = new THREE.PerspectiveCamera(
+      50,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
     camera.position.z = 5;
 
     // --- Post-processing for RGB Glitch Effect ---
@@ -86,8 +243,8 @@ export default function App() {
 
     const RGBShiftShader = {
       uniforms: {
-        'tDiffuse': { value: null as THREE.Texture | null },
-        'amount': { value: 0.0 }
+        tDiffuse: { value: null as THREE.Texture | null },
+        amount: { value: 0.0 },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -107,43 +264,60 @@ export default function App() {
           vec4 cb = texture2D(tDiffuse, vUv - offset);
           gl_FragColor = vec4(cr.r, cg.g, cb.b, cg.a);
         }
-      `
+      `,
     };
     const rgbShiftPass = new ShaderPass(RGBShiftShader);
     composer.addPass(rgbShiftPass);
 
-
-    const slideWidth = 3.2, slideHeight = 1.8, gap = 0.25, slideCount = 10;
+    const slideWidth = 3.2,
+      slideHeight = 1.8,
+      gap = 0.25,
+      slideCount = 10;
     const totalWidth = slideCount * (slideWidth + gap);
     const slideUnit = slideWidth + gap;
 
     const settings = {
-        wheelSensitivity: 0.01, touchSensitivity: 0.01, momentumMultiplier: 2.5, smoothing: 0.1, slideLerp: 0.075,
-        distortionDecay: 0.93, maxDistortion: 4.0, distortionSensitivity: 0.25, distortionSmoothing: 0.075,
-        textFadeStart: slideWidth / 2, textFadeEnd: slideWidth / 2 + 0.5, textMaxBlur: 5,
+      wheelSensitivity: 0.01,
+      touchSensitivity: 0.01,
+      momentumMultiplier: 2.5,
+      smoothing: 0.1,
+      slideLerp: 0.075,
+      distortionDecay: 0.93,
+      maxDistortion: 4.0,
+      distortionSensitivity: 0.25,
+      distortionSmoothing: 0.075,
+      textFadeStart: slideWidth / 2,
+      textFadeEnd: slideWidth / 2 + 0.5,
+      textMaxBlur: 5,
     };
 
     const slides: THREE.Mesh[] = [];
-    let currentPosition = 0, targetPosition = 0, isScrolling = false, autoScrollSpeed = 0, lastTime = 0, globalTime = 0;
-    let currentDistortionFactor = 0, targetDistortionFactor = 0;
+    let currentPosition = 0,
+      targetPosition = 0,
+      isScrolling = false,
+      autoScrollSpeed = 0,
+      lastTime = 0,
+      globalTime = 0;
+    let currentDistortionFactor = 0,
+      targetDistortionFactor = 0;
 
     // Updated titles and image URLs to "coming soon"
-    const comingSoonTitle = { title: "coming soon" };
+    const comingSoonTitle = { title: 'coming soon' };
     const comingSoonImageUrl = 'https://placehold.co/640x360/000000/FFFFFF?text=coming+soon';
 
     const titlesContainer = titlesRef.current;
     const titleElements: { element: HTMLDivElement; index: number }[] = [];
     if (titlesContainer) {
-        for (let i = 0; i < slideCount; i++) {
-            const titleEl = document.createElement("div");
-            titleEl.className = "slide-title";
-            titleEl.innerHTML = `<h2 class="title-text">${comingSoonTitle.title}</h2><p class="title-number">0${i + 1}</p>`;
-            titleEl.style.opacity = "0";
-            titlesContainer.appendChild(titleEl);
-            titleElements.push({ element: titleEl, index: i });
-        }
+      for (let i = 0; i < slideCount; i++) {
+        const titleEl = document.createElement('div');
+        titleEl.className = 'slide-title';
+        titleEl.innerHTML = `<h2 class="title-text">${comingSoonTitle.title}</h2><p class="title-number">0</p>`;
+        titleEl.style.opacity = '0';
+        titlesContainer.appendChild(titleEl);
+        titleElements.push({ element: titleEl, index: i });
+      }
     }
-    
+
     const textureLoader = new THREE.TextureLoader();
     for (let i = 0; i < slideCount; i++) {
       const geometry = new THREE.PlaneGeometry(slideWidth, slideHeight, 1, 1);
@@ -153,69 +327,71 @@ export default function App() {
       mesh.position.x = i * slideUnit - totalWidth / 2;
       mesh.userData = { index: i };
       textureLoader.load(comingSoonImageUrl, (texture: THREE.Texture) => {
-          texture.colorSpace = THREE.SRGBColorSpace;
-          material.map = texture;
-          material.needsUpdate = true;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        material.map = texture;
+        material.needsUpdate = true;
       });
       scene.add(mesh);
       slides.push(mesh);
     }
 
     const updateTitlePositions = () => {
-        let activeSlideIndex = -1;
-        let minDistance = Infinity;
+      let activeSlideIndex = -1;
+      let minDistance = Infinity;
 
-        // Find the slide closest to the center
-        slides.forEach((slide, index) => {
-            const distance = Math.abs(slide.position.x);
-            if (distance < minDistance) {
-                minDistance = distance;
-                activeSlideIndex = index;
-            }
-        });
+      // Find the slide closest to the center
+      slides.forEach((slide, index) => {
+        const distance = Math.abs(slide.position.x);
+        if (distance < minDistance) {
+          minDistance = distance;
+          activeSlideIndex = index;
+        }
+      });
 
-        // Update visibility of all titles
-        titleElements.forEach(({ element, index }) => {
-            // Show title only if its slide is the active one and it's close enough to the center
-            if (index === activeSlideIndex && minDistance < slideWidth * 0.75) {
-                element.style.opacity = '1';
-                element.style.filter = 'blur(0px)';
-            } else {
-                element.style.opacity = '0';
-                element.style.filter = `blur(${settings.textMaxBlur}px)`;
-            }
-        });
+      // Update visibility of all titles
+      titleElements.forEach(({ element, index }) => {
+        // Show title only if its slide is the active one and it's close enough to the center
+        if (index === activeSlideIndex && minDistance < slideWidth * 0.75) {
+          element.style.opacity = '1';
+          element.style.filter = 'blur(0px)';
+        } else {
+          element.style.opacity = '0';
+          element.style.filter = `blur(${settings.textMaxBlur}px)`;
+        }
+      });
     };
 
     const animate = (time: number) => {
-        animationFrameId = requestAnimationFrame(animate);
-        const deltaTime = lastTime ? (time - lastTime) / 1000 : 0.016;
-        lastTime = time;
-        globalTime += deltaTime;
-        
-        if (isScrolling) {
-            targetPosition += autoScrollSpeed;
-            autoScrollSpeed *= 0.95;
-            if (Math.abs(autoScrollSpeed) < 0.001) {
-                isScrolling = false;
-                autoScrollSpeed = 0;
-            }
+      animationFrameId = requestAnimationFrame(animate);
+      const deltaTime = lastTime ? (time - lastTime) / 1000 : 0.016;
+      lastTime = time;
+      globalTime += deltaTime;
+
+      if (isScrolling) {
+        targetPosition += autoScrollSpeed;
+        autoScrollSpeed *= 0.95;
+        if (Math.abs(autoScrollSpeed) < 0.001) {
+          isScrolling = false;
+          autoScrollSpeed = 0;
         }
+      }
 
-        currentPosition += (targetPosition - currentPosition) * settings.smoothing;
-        targetDistortionFactor *= settings.distortionDecay;
-        currentDistortionFactor += (targetDistortionFactor - currentDistortionFactor) * settings.distortionSmoothing;
-        
-        rgbShiftPass.uniforms['amount'].value = currentDistortionFactor * 0.5;
+      currentPosition += (targetPosition - currentPosition) * settings.smoothing;
+      targetDistortionFactor *= settings.distortionDecay;
+      currentDistortionFactor +=
+        (targetDistortionFactor - currentDistortionFactor) * settings.distortionSmoothing;
 
-        slides.forEach((slide) => {
-            let baseX = slide.userData.index * slideUnit - currentPosition;
-            baseX = ((baseX % totalWidth) + totalWidth + totalWidth / 2) % totalWidth - totalWidth / 2;
-            slide.position.x = baseX;
-        });
-        
-        updateTitlePositions();
-        composer.render(deltaTime);
+      rgbShiftPass.uniforms['amount'].value = currentDistortionFactor * 0.5;
+
+      slides.forEach(slide => {
+        let baseX = slide.userData.index * slideUnit - currentPosition;
+        baseX =
+          (((baseX % totalWidth) + totalWidth + totalWidth / 2) % totalWidth) - totalWidth / 2;
+        slide.position.x = baseX;
+      });
+
+      updateTitlePositions();
+      composer.render(deltaTime);
     };
 
     animate(0);
@@ -229,93 +405,108 @@ export default function App() {
     let scrollTimeout: NodeJS.Timeout | null = null;
 
     const snapToCenter = () => {
-        const closest = Math.round(targetPosition / slideUnit);
-        targetPosition = closest * slideUnit;
+      const closest = Math.round(targetPosition / slideUnit);
+      targetPosition = closest * slideUnit;
     };
 
     const throttle = (func: (...args: any[]) => void, delay: number) => {
-        let lastCall = 0;
-        return (...args: any[]) => {
-            const now = new Date().getTime();
-            if (now - lastCall < delay) {
-                return;
-            }
-            lastCall = now;
-            return func(...args);
-        };
+      let lastCall = 0;
+      return (...args: any[]) => {
+        const now = new Date().getTime();
+        if (now - lastCall < delay) {
+          return;
+        }
+        lastCall = now;
+        return func(...args);
+      };
     };
 
-    const handleWheel = (e: WheelEvent) => { 
-        targetPosition -= e.deltaY * settings.wheelSensitivity; 
-        targetDistortionFactor = Math.min(settings.maxDistortion, targetDistortionFactor + Math.abs(e.deltaY) * 0.05); 
-        if (scrollTimeout) clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(snapToCenter, 250);
+    const handleWheel = (e: WheelEvent) => {
+      targetPosition -= e.deltaY * settings.wheelSensitivity;
+      targetDistortionFactor = Math.min(
+        settings.maxDistortion,
+        targetDistortionFactor + Math.abs(e.deltaY) * 0.05
+      );
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(snapToCenter, 250);
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-        isTouching = true;
-        touchStartX = e.touches[0].clientX;
-        touchLastX = touchStartX;
-        isScrolling = false;
-        autoScrollSpeed = 0;
-        if (scrollTimeout) clearTimeout(scrollTimeout);
+      isTouching = true;
+      touchStartX = e.touches[0].clientX;
+      touchLastX = touchStartX;
+      isScrolling = false;
+      autoScrollSpeed = 0;
+      if (scrollTimeout) clearTimeout(scrollTimeout);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-        if (!isTouching) return;
-        const touchX = e.touches[0].clientX;
-        const deltaX = touchX - touchLastX;
-        targetPosition -= deltaX * settings.touchSensitivity;
-        targetDistortionFactor = Math.min(settings.maxDistortion, targetDistortionFactor + Math.abs(deltaX) * 0.08);
-        touchLastX = touchX;
+      if (!isTouching) return;
+      const touchX = e.touches[0].clientX;
+      const deltaX = touchX - touchLastX;
+      targetPosition -= deltaX * settings.touchSensitivity;
+      targetDistortionFactor = Math.min(
+        settings.maxDistortion,
+        targetDistortionFactor + Math.abs(deltaX) * 0.08
+      );
+      touchLastX = touchX;
     };
 
     const handleTouchEnd = () => {
-        isTouching = false;
-        snapToCenter();
+      isTouching = false;
+      snapToCenter();
     };
 
     const throttledWheel = throttle(handleWheel, 16);
     const throttledTouchMove = throttle(handleTouchMove, 16);
-    
-    const onWheel = (e: WheelEvent) => { e.preventDefault(); throttledWheel(e); };
-    const onTouchMove = (e: TouchEvent) => { e.preventDefault(); throttledTouchMove(e); };
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      throttledWheel(e);
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      throttledTouchMove(e);
+    };
 
     const onResize = () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        composer.setSize(window.innerWidth, window.innerHeight);
-        updateTitlePositions();
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+      updateTitlePositions();
     };
     const onClick = (event: MouseEvent) => {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(slides);
       if (intersects.length > 0) {
-          console.log(`Clicked on slide: ${intersects[0].object.userData.index}`);
       }
     };
-    
+
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('resize', onResize);
     canvas.addEventListener('click', onClick);
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-    
+
     cleanupFunctions.push(
-        () => window.removeEventListener('wheel', onWheel),
-        () => window.removeEventListener('resize', onResize),
-        () => canvas.removeEventListener('click', onClick),
-        () => canvas.removeEventListener('touchstart', handleTouchStart),
-        () => canvas.removeEventListener('touchmove', onTouchMove),
-        () => canvas.removeEventListener('touchend', handleTouchEnd),
-        () => renderer.dispose()
+      () => window.removeEventListener('wheel', onWheel),
+      () => window.removeEventListener('resize', onResize),
+      () => canvas.removeEventListener('click', onClick),
+      () => canvas.removeEventListener('touchstart', handleTouchStart),
+      () => canvas.removeEventListener('touchmove', onTouchMove),
+      () => canvas.removeEventListener('touchend', handleTouchEnd),
+      () => renderer.dispose()
     );
 
     return () => {
+      const endTime = performance.now();
+      const loadTime = ((endTime - startTime) / 1000).toFixed(2);
+      console.log(`The page loaded in ${loadTime} seconds`);
+
       cancelAnimationFrame(animationFrameId);
       cleanupFunctions.forEach(fn => fn());
     };
@@ -325,27 +516,17 @@ export default function App() {
     <>
       {/* SEO: Main headline for the page */}
       <h1>PRODUCTS PAGE TITLE HERE</h1> {/* TODO: Match this to the title above */}
-      {/* SEO: Structured Data (JSON-LD) */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Product', // TODO: Use a more specific type if possible
-            'name': 'PRODUCTS PAGE TITLE HERE', // TODO: Match this to the title above
-            // ...add more fields as needed
-          }),
-        }}
-      />
-      <div className="sr-only">Products: SaaS tools, AI-powered solutions, digital products, web applications</div>
+      <div className="sr-only">
+        Products: SaaS tools, AI-powered solutions, digital products, web applications
+      </div>
       <style>{`
         @import url("https://fonts.cdnfonts.com/css/thegoodmonolith");
         @import url("https://fonts.cdnfonts.com/css/pp-neue-montreal");
         
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
         body { font-family: "sans-serif", monospace; color: #f0f0f0; }
-        body::after { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url("https://img.freepik.com/premium-photo/white-dust-scratches-black-background_279525-2.jpg?w=640"); opacity: 0.1; mix-blend-mode: screen; pointer-events: none; z-index: 1; }
-        body::before { content: ""; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: transparent url("http://assets.iceable.com/img/noise-transparent.png") repeat 0 0; animation: noise-animation 0.3s steps(5) infinite; opacity: 0.9; z-index: 100; pointer-events: none; }
+        body::after { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url("/assets/media/bg-image.jpg"); opacity: 0.1; mix-blend-mode: screen; pointer-events: none; z-index: 1; }
+        body::before { content: ""; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: transparent url("http://assets.iceable.com/img/noise-transparent.png") repeat 0 0; animation: noise-animation 0.3s steps(5) infinite; opacity: 0; z-index: 100; pointer-events: none; }
         @keyframes noise-animation { 0% { transform: translate(0, 0); } 10% { transform: translate(-2%, -3%); } 20% { transform: translate(-4%, 2%); } 30% { transform: translate(2%, -4%); } 40% { transform: translate(-2%, 5%); } 50% { transform: translate(-4%, 2%); } 60% { transform: translate(3%, 0); } 70% { transform: translate(0, 3%); } 80% { transform: translate(-3%, 0); } 90% { transform: translate(2%, 2%); } 100% { transform: translate(1%, 0); } }
         
         footer { position: fixed; width: 100vw; padding: 2em; display: flex; justify-content: flex-end; align-items: center; z-index: 2; mix-blend-mode: difference; bottom: 0; right: 0; opacity: 0; transition: opacity 0.5s ease; }
@@ -414,9 +595,8 @@ margin: 0; }
         }
 
       `}</style>
-
       <div ref={preloaderRef} className="preloader">
-      <div className="loading-text"></div>
+        <div className="loading-text"></div>
         <div className="progress-text-container">
           md.
           <div ref={progressFillRef} className="progress-text-fill">
@@ -424,34 +604,37 @@ margin: 0; }
           </div>
         </div>
       </div>
-     
       <h1 ref={productsHeadingRef} className="products-heading">
-  /products<br />
-  <span
-    style={{
-      fontSize: '1.2vh',
-      opacity: 1,
-      animation: 'fadeAndHide 0.6s ease-in-out 6s forwards',
-    }}
-  >
-    *swipe/scroll to navigate
-  </span>
-
-  {/* Inline @keyframes via <style> tag */}
-  <style> {`
+        /products
+        <br />
+        <span
+          style={{
+            fontSize: '1.2vh',
+            opacity: 1,
+            animation: 'fadeAndHide 0.6s ease-in-out 6s forwards',
+          }}
+        >
+          *swipe/scroll to navigate
+        </span>
+        {/* Inline @keyframes via <style> tag */}
+        <style>
+          {' '}
+          {`
       @keyframes fadeAndHide {
         to {
           opacity: 0;
           visibility: hidden;}} `}
-  </style>
-</h1>  <div ref={particlesRef} className="particles"></div>
+        </style>
+      </h1>{' '}
+      <div ref={particlesRef} className="particles"></div>
       <div ref={titlesRef} id="titles-container"></div>
       <canvas ref={canvasRef} id="canvas"></canvas>
+      <Script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productsData),
+        }}
+      />
     </>
   );
 }
-
-
-
-
-

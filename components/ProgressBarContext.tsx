@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 interface ProgressBarContextType {
@@ -47,7 +47,7 @@ export function ProgressBarProvider({ children }: { children: React.ReactNode })
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const link = target.closest('a');
-      
+
       if (link && link.href && !link.href.includes('#') && !link.target) {
         const url = new URL(link.href);
         if (url.origin === window.location.origin) {
@@ -82,4 +82,4 @@ export function ProgressBarProvider({ children }: { children: React.ReactNode })
       {children}
     </ProgressBarContext.Provider>
   );
-} 
+}

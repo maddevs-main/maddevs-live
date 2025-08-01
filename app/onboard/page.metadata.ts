@@ -1,17 +1,19 @@
 export const generateMetadata = async () => ({
-  title: 'ONBOARD PAGE TITLE HERE', // TODO: Fill in unique title
-  description: 'ONBOARD PAGE DESCRIPTION HERE', // TODO: Fill in unique description
+  title: 'onboard/maddevs – creative web design & development',
+  description:
+    'Every project begins with intention. Onboarding at maddevs is the entry point to tailored digital systems—crafted with depth, designed for nuance. Whether it’s an expressive brand site, a secure RBAC dashboard, or a performant PWA, this is where strategy meets expression. Expect architectural clarity, intelligent timelines, and an invitation to build something enduring.',
   openGraph: {
-    title: 'ONBOARD PAGE TITLE HERE',
-    description: 'ONBOARD PAGE DESCRIPTION HERE',
+    title: 'onboard/maddevs – creative web design & development',
+    description:
+      'Begin your digital build with maddevs—where onboarding isn’t paperwork, it’s groundwork. Define your scope, map your system, and align vision to precision. From founders seeking elegance to teams scaling fast, we help translate ambition into architecture.',
     url: 'https://maddevs.in/onboard',
-    siteName: 'MadDevs',
+    siteName: 'maddevs',
     images: [
       {
-        url: 'https://maddevs.in/assets/media/door.jpg', // TODO: Use a relevant image for this page
+        url: 'https://maddevs.in/assets/media/creative_consulting_onboard.jpg',
         width: 1200,
         height: 630,
-        alt: 'Onboarding, web development, creative design',
+        alt: 'Entrance to onboarding with maddevs – creative systems and web development',
       },
     ],
     locale: 'en_US',
@@ -19,12 +21,11 @@ export const generateMetadata = async () => ({
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ONBOARD PAGE TITLE HERE',
-    description: 'ONBOARD PAGE DESCRIPTION HERE',
+    title: 'onboard/maddevs – creative web design & development',
+    description:
+      'Start your project at maddevs. Onboarding opens the process—scope refinement, systems thinking, and expressive strategy for modern digital platforms. Build the right thing, the right way—from day zero.',
     site: '@maddevs_in',
     creator: '@maddevs_in',
-    images: ['https://maddevs.in/assets/media/door.jpg'],
+    images: ['https://maddevs.in/assets/media/creative_consulting_onboard.jpg'],
   },
 });
- 
-export default generateMetadata; 

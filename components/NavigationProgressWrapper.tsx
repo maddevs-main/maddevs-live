@@ -1,7 +1,6 @@
-"use client"
+'use client';
 import { useEffect } from 'react';
 import NProgress from 'nprogress';
-
 
 export default function NavigationProgressWrapper() {
   useEffect(() => {
@@ -22,7 +21,7 @@ export default function NavigationProgressWrapper() {
       if (window.location.pathname !== currentPath) {
         NProgress.start();
         currentPath = window.location.pathname;
-        
+
         // Complete after navigation
         timeoutId = setTimeout(() => {
           NProgress.done();
@@ -37,7 +36,7 @@ export default function NavigationProgressWrapper() {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const link = target.closest('a');
-      
+
       if (link && link.href && !link.href.includes('#') && !link.target) {
         const url = new URL(link.href);
         if (url.origin === window.location.origin) {
@@ -54,7 +53,7 @@ export default function NavigationProgressWrapper() {
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
 
-    history.pushState = function(...args) {
+    history.pushState = function (...args) {
       originalPushState.apply(history, args);
       NProgress.start();
       timeoutId = setTimeout(() => {
@@ -62,7 +61,7 @@ export default function NavigationProgressWrapper() {
       }, 800);
     };
 
-    history.replaceState = function(...args) {
+    history.replaceState = function (...args) {
       originalReplaceState.apply(history, args);
       NProgress.start();
       timeoutId = setTimeout(() => {
@@ -82,4 +81,4 @@ export default function NavigationProgressWrapper() {
   }, []);
 
   return null;
-} 
+}
